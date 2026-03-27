@@ -53,12 +53,16 @@ namespace pizda {
 			uint8_t spreadingFactor = 0;
 			SX1262::LoRaCodingRate codingRate = SX1262::LoRaCodingRate::cr4_5;
 			uint8_t syncWord = 0;
-			int8_t powerDBm = 0;
 			uint16_t preambleLength = 0;
+
+			uint8_t currentLimitMA = 0;
+			int8_t powerDBm = 0;
 
 			void sanitize() {
 				frequencyHz = std::clamp<uint32_t>(frequencyHz, 120'000'000, 960'000'000);
 				spreadingFactor = std::clamp<uint8_t>(spreadingFactor, 5, 12);
+
+				currentLimitMA = std::clamp<uint8_t>(currentLimitMA, 0, 140);
 				powerDBm = std::clamp<int8_t>(powerDBm, -17, 22);
 			}
 	};

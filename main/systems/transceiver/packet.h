@@ -148,9 +148,12 @@ namespace pizda {
 			constexpr static uint8_t spreadingFactorLengthBits = 4;
 			constexpr static uint8_t codingRateLengthBits = 3;
 			constexpr static uint8_t syncWordLengthBits = 8;
-			constexpr static uint8_t powerDBmLengthBits = 8;
 			constexpr static uint8_t preambleLengthLengthBits = 16;
+
+			constexpr static uint8_t currentLimitMALengthBits = 8;
+			constexpr static uint8_t powerDBmLengthBits = 8;
 	};
+
 
 	class RemoteAuxiliaryPIDPacket {
 		public:

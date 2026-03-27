@@ -79,8 +79,11 @@ namespace pizda {
 					config::transceiver::communicationSettings.spreadingFactor,
 					config::transceiver::communicationSettings.codingRate,
 					config::transceiver::communicationSettings.syncWord,
+					config::transceiver::communicationSettings.preambleLength,
+
+					config::transceiver::communicationSettings.currentLimitMA,
 					config::transceiver::communicationSettings.powerDBm,
-					config::transceiver::communicationSettings.preambleLength
+					false
 				);
 
 				if (error != SX1262::error::none) {
@@ -285,6 +288,11 @@ namespace pizda {
 
 				if (!checkSetCommunicationSettingsSXError(
 					_SX.setRFFrequency(settings.frequencyHz)
+				))
+					return false;
+
+				if (!checkSetCommunicationSettingsSXError(
+					_SX.setCurrentLimit(settings.currentLimitMA)
 				))
 					return false;
 

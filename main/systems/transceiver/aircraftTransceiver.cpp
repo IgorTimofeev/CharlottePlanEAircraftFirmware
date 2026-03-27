@@ -558,8 +558,10 @@ namespace pizda {
 				+ RemoteAuxiliaryXCVRPacket::spreadingFactorLengthBits
 				+ RemoteAuxiliaryXCVRPacket::codingRateLengthBits
 				+ RemoteAuxiliaryXCVRPacket::syncWordLengthBits
-				+ RemoteAuxiliaryXCVRPacket::powerDBmLengthBits
-				+ RemoteAuxiliaryXCVRPacket::preambleLengthLengthBits,
+				+ RemoteAuxiliaryXCVRPacket::preambleLengthLengthBits
+
+				+ RemoteAuxiliaryXCVRPacket::currentLimitMALengthBits
+				+ RemoteAuxiliaryXCVRPacket::powerDBmLengthBits,
 			payloadLength
 		))
 			return false;
@@ -569,8 +571,11 @@ namespace pizda {
 		_tmpCommunicationSettings.spreadingFactor = stream.readUint8(RemoteAuxiliaryXCVRPacket::spreadingFactorLengthBits);
 		_tmpCommunicationSettings.codingRate = static_cast<SX1262::LoRaCodingRate>(stream.readUint8(RemoteAuxiliaryXCVRPacket::codingRateLengthBits));
 		_tmpCommunicationSettings.syncWord = stream.readUint8(RemoteAuxiliaryXCVRPacket::syncWordLengthBits);
-		_tmpCommunicationSettings.powerDBm = stream.readInt8(RemoteAuxiliaryXCVRPacket::powerDBmLengthBits);
 		_tmpCommunicationSettings.preambleLength = stream.readUint16(RemoteAuxiliaryXCVRPacket::preambleLengthLengthBits);
+
+		_tmpCommunicationSettings.currentLimitMA = stream.readInt8(RemoteAuxiliaryXCVRPacket::currentLimitMALengthBits);
+		_tmpCommunicationSettings.powerDBm = stream.readInt8(RemoteAuxiliaryXCVRPacket::powerDBmLengthBits);
+
 		_tmpCommunicationSettings.sanitize();
 
 		ESP_LOGI(_logTag, "received communication settings");
@@ -579,8 +584,10 @@ namespace pizda {
 		ESP_LOGI(_logTag, "spreadingFactor: %d", _tmpCommunicationSettings.spreadingFactor);
 		ESP_LOGI(_logTag, "codingRate: %d",std::to_underlying(_tmpCommunicationSettings.codingRate));
 		ESP_LOGI(_logTag, "syncWord: %d", _tmpCommunicationSettings.syncWord);
-		ESP_LOGI(_logTag, "powerDBm: %d", _tmpCommunicationSettings.powerDBm);
 		ESP_LOGI(_logTag, "preambleLength: %d", _tmpCommunicationSettings.preambleLength);
+
+		ESP_LOGI(_logTag, "currentLimitMA: %d", _tmpCommunicationSettings.currentLimitMA);
+		ESP_LOGI(_logTag, "powerDBm: %d", _tmpCommunicationSettings.powerDBm);
 
 		enqueueAuxiliary(AircraftAuxiliaryPacketType::XCVRACK);
 
