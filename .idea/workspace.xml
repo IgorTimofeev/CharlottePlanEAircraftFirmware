@@ -189,7 +189,21 @@
   <component name="ChangeListManager">
     <list default="true" id="a04a4ac8-16c5-48a7-ad8e-db4d998b46b6" name="Changes" comment="))">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main/systems/flyByWire/flyByWire.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/main/systems/flyByWire/flyByWire.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ESP-IDF-BMP280" beforeDir="false" afterPath="$PROJECT_DIR$/components/ESP-IDF-BMP280" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ESP-IDF-BMP280/src/BMP280.h" beforeDir="false" afterPath="$PROJECT_DIR$/components/ESP-IDF-BMP280/src/BMP280.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ESP-IDF-BusHAL" beforeDir="false" afterPath="$PROJECT_DIR$/components/ESP-IDF-BusHAL" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ESP-IDF-BusHAL/src/busHAL.h" beforeDir="false" afterPath="$PROJECT_DIR$/components/ESP-IDF-BusHAL/src/busHAL.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ESP-IDF-MPU9250" beforeDir="false" afterPath="$PROJECT_DIR$/components/ESP-IDF-MPU9250" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ESP-IDF-MPU9250/src/MPU9250.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/components/ESP-IDF-MPU9250/src/MPU9250.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ESP-IDF-MPU9250/src/MPU9250.h" beforeDir="false" afterPath="$PROJECT_DIR$/components/ESP-IDF-MPU9250/src/MPU9250.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ESP-IDF-NVSExtensions" beforeDir="false" afterPath="$PROJECT_DIR$/components/ESP-IDF-NVSExtensions" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ESP-IDF-NVSExtensions/src/NVSStream.h" beforeDir="false" afterPath="$PROJECT_DIR$/components/ESP-IDF-NVSExtensions/src/NVSStream.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ESP-IDF-SX1262" beforeDir="false" afterPath="$PROJECT_DIR$/components/ESP-IDF-SX1262" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ESP-IDF-SX1262/src/SX1262.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/components/ESP-IDF-SX1262/src/SX1262.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ESP-IDF-SX1262/src/SX1262.h" beforeDir="false" afterPath="$PROJECT_DIR$/components/ESP-IDF-SX1262/src/SX1262.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/aircraft.h" beforeDir="false" afterPath="$PROJECT_DIR$/main/aircraft.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/settings/ADIRSSettings.h" beforeDir="false" afterPath="$PROJECT_DIR$/main/settings/ADIRSSettings.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/systems/transceiver/transceiver.h" beforeDir="false" afterPath="$PROJECT_DIR$/main/systems/transceiver/transceiver.h" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -202,7 +216,7 @@
   </component>
   <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Debug" />
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/components/ESP-IDF-MPU9250" />
     <option name="ROOT_SYNC" value="DONT_SYNC" />
   </component>
   <component name="GitHubPullRequestSearchHistory">{
@@ -244,34 +258,34 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;CMake Application.CharlottePlanE.elf.executor&quot;: &quot;Run&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.RadMigrateCodeStyle&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.west.config.association.type.startup.service&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
-    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/Igor/Documents/Code/MCU/ESP32/Charlotte/PlanE/main/settings&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;project.propVCSSupport.DirectoryMappings&quot;,
-    &quot;structure.view.defaults.are.configured&quot;: &quot;true&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "CMake Application.CharlottePlanE.elf.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.RadMigrateCodeStyle": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "RunOnceActivity.west.config.association.type.startup.service": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "C:/Users/Igor/Documents/Code/MCU/ESP32/Charlotte/PlanE/main/settings",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "run.code.analysis.last.selected.profile": "pProject Default",
+    "settings.editor.selected.configurable": "project.propVCSSupport.DirectoryMappings",
+    "structure.view.defaults.are.configured": "true",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\Igor\Documents\Code\MCU\ESP32\Charlotte\PlanE\main\settings" />
@@ -1045,6 +1059,7 @@
       </method>
     </configuration>
     <list>
+      <item itemvalue="CMake Application.bootloader" />
       <item itemvalue="CMake Application.CharlottePlanE.elf" />
       <item itemvalue="CMake Application.__idf_ESP-IDF-BMP280" />
       <item itemvalue="CMake Application.__idf_ESP-IDF-Battery" />
@@ -1154,7 +1169,6 @@
       <item itemvalue="CMake Application.app" />
       <item itemvalue="CMake Application.app_check_size" />
       <item itemvalue="CMake Application.bootloader-flash" />
-      <item itemvalue="CMake Application.bootloader" />
       <item itemvalue="CMake Application.confserver" />
       <item itemvalue="CMake Application.custom_bundle" />
       <item itemvalue="CMake Application.dfu-flash" />
@@ -1334,15 +1348,19 @@
       <workItem from="1771653065744" duration="11166000" />
       <workItem from="1771732000691" duration="7690000" />
       <workItem from="1772265194999" duration="7200000" />
-      <workItem from="1772450217273" duration="669000" />
-    </task>
-    <task id="LOCAL-00119" summary="чета подустал, хуйни могу накодить, над отдохнуть">
-      <option name="closed" value="true" />
-      <created>1768001288634</created>
-      <option name="number" value="00119" />
-      <option name="presentableId" value="LOCAL-00119" />
-      <option name="project" value="LOCAL" />
-      <updated>1768001288634</updated>
+      <workItem from="1772450217273" duration="1526000" />
+      <workItem from="1772898508416" duration="597000" />
+      <workItem from="1773589365886" duration="2000" />
+      <workItem from="1773775287043" duration="1000" />
+      <workItem from="1773861298505" duration="118000" />
+      <workItem from="1773942011582" duration="475000" />
+      <workItem from="1773943226274" duration="1000" />
+      <workItem from="1774115860918" duration="555000" />
+      <workItem from="1774295084216" duration="7000" />
+      <workItem from="1774359970194" duration="2000" />
+      <workItem from="1774450104855" duration="600000" />
+      <workItem from="1774531546584" duration="598000" />
+      <workItem from="1774604842096" duration="4268000" />
     </task>
     <task id="LOCAL-00120" summary="таймаут на калибровку заебенил, по идее даже если чет отвалится, то оно само в норму придет">
       <option name="closed" value="true" />
@@ -1728,7 +1746,15 @@
       <option name="project" value="LOCAL" />
       <updated>1772272502220</updated>
     </task>
-    <option name="localTasksCounter" value="168" />
+    <task id="LOCAL-00168" summary="))">
+      <option name="closed" value="true" />
+      <created>1772451155721</created>
+      <option name="number" value="00168" />
+      <option name="presentableId" value="LOCAL-00168" />
+      <option name="project" value="LOCAL" />
+      <updated>1772451155722</updated>
+    </task>
+    <option name="localTasksCounter" value="169" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

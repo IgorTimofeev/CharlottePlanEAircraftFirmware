@@ -1,6 +1,6 @@
 #pragma once
 
-#define SIM
+// #define SIM
 
 #include <esp_adc/adc_oneshot.h>
 

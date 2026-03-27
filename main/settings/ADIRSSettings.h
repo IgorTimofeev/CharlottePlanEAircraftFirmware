@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <span>
 
 #include <NVSSettings.h>
 #include <NVSStream.h>
@@ -36,7 +37,7 @@ namespace pizda {
 
 				// Units
 				{
-					const auto readUnitCount = stream.readObjectLength<ADIRSSettingsUnit>(_units);
+					const auto readUnitCount = stream.readObjectSize<ADIRSSettingsUnit>(_units);
 
 					if (readUnitCount <= 0)
 						return;
@@ -46,14 +47,14 @@ namespace pizda {
 						return;
 					}
 
-					stream.readObject<ADIRSSettingsUnit>(_units, units.data(), readUnitCount);
+					stream.readObject<ADIRSSettingsUnit>(_units, std::span { units.data(), readUnitCount });
 				}
 			}
 
 			void onWrite(const NVSStream& stream) override {
 				stream.writeUint32(_referencePressurePa, referencePressurePa);
 				stream.writeInt16(_magneticDeclinationDeg, magneticDeclinationDeg);
-				stream.writeObject<ADIRSSettingsUnit>(_units, units.data(), config::adirs::unitCount);
+				stream.writeObject<ADIRSSettingsUnit>(_units, units);
 			}
 			
 		private:
