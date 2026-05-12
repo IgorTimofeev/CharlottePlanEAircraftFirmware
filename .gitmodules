@@ -34,3 +34,6 @@
 [submodule "components/ESP-IDF-CircularQueue"]
 	path = components/ESP-IDF-CircularQueue
 	url = https://github.com/IgorTimofeev/ESP-IDF-CircularQueue.git
+[submodule "components/ESP-IDF-PCA9685"]
+	path = components/ESP-IDF-PCA9685
+	url = https://github.com/IgorTimofeev/ESP-IDF-PCA9685.git
