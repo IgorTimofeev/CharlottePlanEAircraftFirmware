@@ -62,18 +62,18 @@ namespace pizda {
 
 				const auto packet = reinterpret_cast<SimLinkAircraftPacket*>(_buffer);
 
-				const auto throttle = ac.motors.getMotor(MotorType::throttle);
-				const auto ailerons = ac.motors.getMotor(MotorType::aileronLeft);
-				const auto elevator = ac.motors.getMotor(MotorType::tailLeft);
-				const auto rudder = ac.motors.getMotor(MotorType::tailRight);
-				const auto flaps = ac.motors.getMotor(MotorType::flapLeft);
+				const auto throttle = ac.motors.getByType(MotorType::throttle);
+				const auto ailerons = ac.motors.getByType(MotorType::aileronLeft);
+				const auto elevator = ac.motors.getByType(MotorType::tailLeft);
+				const auto rudder = ac.motors.getByType(MotorType::tailRight);
+				const auto flaps = ac.motors.getByType(MotorType::flapLeft);
 
 				packet->header = SimLinkPacket::header;
-				packet->throttle = throttle ? throttle->getPowerF() : 0;
-				packet->ailerons = ailerons ? ailerons->getPowerF() : 0;
-				packet->elevator = elevator ? elevator->getPowerF() : 0;
-				packet->rudder = rudder ? rudder->getPowerF() : 0;
-				packet->flaps = flaps ? flaps->getPowerF() : 0;
+				packet->throttle = throttle ? throttle->getRawPowerF() : 0;
+				packet->ailerons = ailerons ? ailerons->getRawPowerF() : 0;
+				packet->elevator = elevator ? elevator->getRawPowerF() : 0;
+				packet->rudder = rudder ? rudder->getRawPowerF() : 0;
+				packet->flaps = flaps ? flaps->getRawPowerF() : 0;
 
 				packet->lights =
 					(ac.settings.lights.nav << 0)

@@ -43,7 +43,7 @@ namespace pizda {
 			static void updateNavOrLanding(const Light& light, uint8_t r, uint8_t g, uint8_t b);
 			static void updateWingStrobe(const Light& light, uint8_t r, uint8_t g, uint8_t b);
 			void updateTailStrobe(bool active) const;
-			void setCabin(const bool state) const;
+			static void setCabin(const bool state);
 
 			[[noreturn]] void onStart() const;
 	};

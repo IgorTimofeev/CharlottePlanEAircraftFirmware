@@ -18,8 +18,8 @@ namespace pizda {
 	class RemoteDataRawCamera {
 		public:
 			// [0.0; 1.0]
-			float pitchFactor01 = 0.0f;
-			float yawFactor01 = 0.0f;
+			float pitchFactor01 = 0.5f;
+			float yawFactor01 = 0.5f;
 	};
 	
 	class RemoteDataRaw {

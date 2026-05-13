@@ -3,6 +3,7 @@
 #include <array>
 #include <atomic>
 
+#include "types/generic.h"
 #include "config.h"
 #include "systems/motors/motor.h"
 
@@ -10,33 +11,12 @@
 
 namespace pizda {
 	using namespace YOBA;
-
-	enum class MotorType : uint8_t {
-		cameraPitch,
-		cameraYaw,
-
-		throttle,
-		noseWheel,
-		reverse,
-
-		flapLeft,
-		aileronLeft,
-		
-		flapRight,
-		aileronRight,
-		
-		tailLeft,
-		tailRight,
-
-		maxValue = tailRight
-	};
 	
 	class Motors {
 		public:
 			void setup();
-			Motor* getMotor(uint8_t index);
-			Motor* getMotor(MotorType type);
-			void updateConfigurationsFromSettings();
+			Motor* get(uint8_t index);
+			Motor* getByType(MotorType type);
 
 		private:
 			constexpr static auto _logTag = "Motors";

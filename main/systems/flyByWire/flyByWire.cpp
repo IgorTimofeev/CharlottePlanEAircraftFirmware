@@ -383,7 +383,7 @@ namespace pizda {
 		
 		// Throttle
 		{
-			const auto motor = ac.motors.getMotor(MotorType::throttle);
+			const auto motor = ac.motors.getByType(MotorType::throttle);
 			
 			if (!motor)
 				return;
@@ -393,8 +393,8 @@ namespace pizda {
 		
 		// Ailerons
 		{
-			const auto leftAileronMotor = ac.motors.getMotor(MotorType::aileronLeft);
-			const auto rightAileronMotor = ac.motors.getMotor(MotorType::aileronRight);
+			const auto leftAileronMotor = ac.motors.getByType(MotorType::aileronLeft);
+			const auto rightAileronMotor = ac.motors.getByType(MotorType::aileronRight);
 
 			leftAileronMotor->setPowerF(_aileronsFactor);
 			rightAileronMotor->setPowerF(_aileronsFactor);
@@ -402,9 +402,9 @@ namespace pizda {
 		
 		// Elevator & rudder
 		{
-			const auto leftTailMotor = ac.motors.getMotor(MotorType::tailLeft);
-			const auto rightTailMotor = ac.motors.getMotor(MotorType::tailRight);
-			const auto noseWheelMotor = ac.motors.getMotor(MotorType::noseWheel);
+			const auto leftTailMotor = ac.motors.getByType(MotorType::tailLeft);
+			const auto rightTailMotor = ac.motors.getByType(MotorType::tailRight);
+			const auto noseWheelMotor = ac.motors.getByType(MotorType::noseWheel);
 
 			#ifdef SIM
 				leftTailMotor->setPowerF(_elevatorFactor);
@@ -429,8 +429,8 @@ namespace pizda {
 		
 		// Flaps
 		{
-			const auto leftFlapMotor = ac.motors.getMotor(MotorType::flapLeft);
-			const auto rightFlapMotor = ac.motors.getMotor(MotorType::flapRight);
+			const auto leftFlapMotor = ac.motors.getByType(MotorType::flapLeft);
+			const auto rightFlapMotor = ac.motors.getByType(MotorType::flapRight);
 			
 			if (!leftFlapMotor || !rightFlapMotor)
 				return;
@@ -441,8 +441,8 @@ namespace pizda {
 
 		// Camera
 		{
-			const auto cameraPitchMotor = ac.motors.getMotor(MotorType::cameraPitch);
-			const auto cameraYawMotor = ac.motors.getMotor(MotorType::cameraYaw);
+			const auto cameraPitchMotor = ac.motors.getByType(MotorType::cameraPitch);
+			const auto cameraYawMotor = ac.motors.getByType(MotorType::cameraYaw);
 
 			if (!cameraPitchMotor || !cameraYawMotor)
 				return;

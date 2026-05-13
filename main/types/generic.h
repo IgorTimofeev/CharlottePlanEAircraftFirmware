@@ -31,6 +31,26 @@ namespace pizda {
 		alt
 	};
 
+	enum class MotorType : uint8_t {
+		cameraPitch,
+		cameraYaw,
+
+		throttle,
+		noseWheel,
+		reverse,
+
+		flapLeft,
+		aileronLeft,
+
+		flapRight,
+		aileronRight,
+
+		tailLeft,
+		tailRight,
+
+		maxValue = tailRight
+	};
+
 	class MotorSettings {
 		public:
 			uint16_t min = 1000;
@@ -43,6 +63,18 @@ namespace pizda {
 
 				if (min > max)
 					std::swap(min, max);
+			}
+
+			constexpr static uint8_t powerResolutionBits = 12;
+			constexpr static uint16_t powerMax = (1 << powerResolutionBits) - 1;
+
+			constexpr static uint8_t dutyFrequencyHz = 50;
+			constexpr static uint16_t dutyCycleDurationUs = 1'000'000 / dutyFrequencyHz;
+			constexpr static uint8_t dutyResolutionBits = 12;
+			constexpr static uint16_t dutyMax = (1 << dutyResolutionBits) - 1;
+
+			constexpr static uint16_t pulseWidthUsToDuty(const uint16_t pulseWidthUs) {
+				return static_cast<uint32_t>(pulseWidthUs) * dutyMax / dutyCycleDurationUs;
 			}
 	};
 

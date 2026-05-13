@@ -3,37 +3,35 @@
 #include "aircraft.h"
 
 namespace pizda {
-	uint16_t Motor::getPower() const {
+	uint16_t Motor::getRawPower() const {
 		return _power;
 	}
-	
-	float Motor::getPowerF() const {
-		return static_cast<float>(getPower()) / static_cast<float>(powerMax);
+
+	float Motor::getRawPowerF() const {
+		return static_cast<float>(getRawPower()) / static_cast<float>(MotorSettings::powerMax);
 	}
 
-	uint16_t Motor::getPowerPulseWithUs() const {
-		auto pulseWidthUs = _settings.min + (_settings.max - _settings.min) * _power / powerMax;
-
-		if (_settings.reverse)
-			pulseWidthUs = _settings.min + _settings.max - pulseWidthUs;
-
-		pulseWidthUs = std::clamp<int32_t>(pulseWidthUs, _settings.min, _settings.max);
-
-		//		ESP_LOGI("ppizda", "pulse: %d", pulseWidthUs);
-
-		return pulseWidthUs;
+	uint16_t Motor::getPower() const {
+		return _settings.reverse ? MotorSettings::powerMax - _power : _power;
 	}
 
-	// Value range is [0; 0xFFFF]
+	uint16_t Motor::getPulseWidthUs() const {
+		return _settings.min + (_settings.max - _settings.min) * getPower() / MotorSettings::powerMax;
+	}
+
+	uint16_t Motor::getDuty() const {
+		return MotorSettings::pulseWidthUsToDuty(getPulseWidthUs());
+	}
+
 	void Motor::setPower(const uint16_t value) {
 		_power = value;
 	}
 	
 	void Motor::setPowerF(const float value) {
-		setPower(std::round(value * static_cast<float>(powerMax)));
+		setPower(std::round(value * static_cast<float>(MotorSettings::powerMax)));
 	}
 
-	void Motor::setSettings(const MotorSettings& settings) {
-		_settings = settings;
+	void Motor::setSettings(const MotorSettings* settings) {
+		_settings = *settings;
 	}
 }

@@ -486,7 +486,7 @@ namespace pizda {
 			static_cast<float>(stream.readUint16(RemoteAuxiliaryCameraPacket::yawLengthBits))
 			/ static_cast<float>((1 << RemoteAuxiliaryCameraPacket::yawLengthBits) - 1);
 
-		// ESP_LOGI(_logTag, "Received camera: %f, %f", ac.remoteData.raw.camera.pitchFactor01, ac.remoteData.raw.camera.yawFactor01);
+		ESP_LOGI(_logTag, "Received camera: %f, %f", ac.remoteData.raw.camera.pitchFactor01, ac.remoteData.raw.camera.yawFactor01);
 
 		return true;
 	}
@@ -519,43 +519,33 @@ namespace pizda {
 		if (!validatePayloadChecksumAndLength(
 			stream,
 			RemoteAuxiliaryPacket::typeLengthBits
-				+ (
-					RemoteAuxiliaryMotorConfigurationPacket::minLengthBits
-					+ RemoteAuxiliaryMotorConfigurationPacket::maxLengthBits
-					+ 1
-				)
-				* 8,
+				+ RemoteAuxiliaryMotorConfigurationPacket::typeLengthBits
+				+ RemoteAuxiliaryMotorConfigurationPacket::minLengthBits
+				+ RemoteAuxiliaryMotorConfigurationPacket::maxLengthBits
+				+ 1,
 			payloadLength
 		))
 			return false;
-		
-		const auto read = [&stream](MotorSettings& settings) {
-			settings.min = stream.readUint16(RemoteAuxiliaryMotorConfigurationPacket::minLengthBits);
-			settings.max = stream.readUint16(RemoteAuxiliaryMotorConfigurationPacket::maxLengthBits);
-			settings.reverse = stream.readBool();
-			settings.sanitize();
-			
-			ESP_LOGI(_logTag, "min: %d, max: %d, reverse: %d", settings.min, settings.max, settings.reverse);
-		};
-		
-		read(ac.settings.motors.throttle);
-		read(ac.settings.motors.noseWheel);
-		
-		read(ac.settings.motors.flapLeft);
-		read(ac.settings.motors.aileronLeft);
 
-		read(ac.settings.motors.flapRight);
-		read(ac.settings.motors.aileronRight);
+		auto motorType = static_cast<MotorType>( stream.readUint8(RemoteAuxiliaryMotorConfigurationPacket::typeLengthBits));
 
-		read(ac.settings.motors.tailLeft);
-		read(ac.settings.motors.tailRight);
+		auto motor = ac.motors.getByType(motorType);
+		auto settings = ac.settings.motors.getByType(motorType);
 
-		read(ac.settings.motors.cameraPitch);
-		read(ac.settings.motors.cameraYaw);
+		if (motor && settings) {
+			// Settings
+			settings->min = stream.readUint16(RemoteAuxiliaryMotorConfigurationPacket::minLengthBits);
+			settings->max = stream.readUint16(RemoteAuxiliaryMotorConfigurationPacket::maxLengthBits);
+			settings->reverse = stream.readBool();
+			settings->sanitize();
 
-		ac.motors.updateConfigurationsFromSettings();
-		ac.settings.motors.scheduleWrite();
-		
+			// Motor
+			motor->setSettings(settings);
+			ac.settings.motors.scheduleWrite();
+
+			ESP_LOGI(_logTag, "type: %d, min: %d, max: %d, reverse: %d", static_cast<uint8_t>(motorType), settings->min, settings->max, settings->reverse);
+		}
+
 		return true;
 	}
 
@@ -699,9 +689,9 @@ namespace pizda {
 		// -------------------------------- Throttle --------------------------------
 		
 		stream.writeUint8(
-			static_cast<uint32_t>(ac.motors.getMotor(MotorType::throttle)->getPower())
+			static_cast<uint32_t>(ac.motors.getByType(MotorType::throttle)->getRawPower())
 				* ((1 << AircraftTelemetrySecondaryPacket::throttleLengthBits) - 1)
-				/ Motor::powerMax,
+				/ MotorSettings::powerMax,
 			AircraftTelemetrySecondaryPacket::throttleLengthBits
 		);
 
@@ -709,17 +699,17 @@ namespace pizda {
 
 		// Pitch
 		stream.writeUint8(
-			static_cast<uint32_t>(ac.motors.getMotor(MotorType::cameraPitch)->getPower())
+			static_cast<uint32_t>(ac.motors.getByType(MotorType::cameraPitch)->getRawPower())
 				* ((1 << AircraftTelemetrySecondaryPacket::cameraPitchLengthBits) - 1)
-				/ Motor::powerMax,
+				/ MotorSettings::powerMax,
 			AircraftTelemetrySecondaryPacket::cameraPitchLengthBits
 		);
 
 		// Yaw
 		stream.writeUint8(
-			static_cast<uint32_t>(ac.motors.getMotor(MotorType::cameraYaw)->getPower())
+			static_cast<uint32_t>(ac.motors.getByType(MotorType::cameraYaw)->getRawPower())
 				* ((1 << AircraftTelemetrySecondaryPacket::cameraYawLengthBits) - 1)
-				/ Motor::powerMax,
+				/ MotorSettings::powerMax,
 			AircraftTelemetrySecondaryPacket::cameraYawLengthBits
 		);
 
@@ -752,7 +742,7 @@ namespace pizda {
 		stream.writeBool(ac.settings.lights.strobe);
 		stream.writeBool(ac.settings.lights.landing);
 		stream.writeBool(ac.settings.lights.cabin);
-		
+
 		// -------------------------------- Autopilot --------------------------------
 		
 		// Modes

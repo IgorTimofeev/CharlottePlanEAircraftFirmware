@@ -101,13 +101,10 @@ namespace pizda {
 					};
 			};
 
-			class pwmc {
+			class pwmu {
 				public:
 					constexpr static uint8_t I2CAddress =  PCA9685::I2CBaseAddress | 0b0000'0000;
 					constexpr static uint32_t I2CFrequencyHz = PCA9685::I2CDefaultFrequency;
-
-					constexpr static uint16_t PWMFrequencyHz = 50;
-					constexpr static uint8_t PWMResolutionBits = 12;
 			};
 
 			class adirs {

@@ -123,8 +123,8 @@ namespace pizda {
 		_tail.flush();
 	}
 
-	void Lights::setCabin(const bool state) const {
-		gpio_set_level(config::lights::cabin::pin, state);
+	void Lights::setCabin(const bool state) {
+		gpio_set_level(config::lights::cabin::pin, !state);
 	}
 
 	[[noreturn]] void Lights::onStart() const {

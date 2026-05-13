@@ -25,6 +25,27 @@ namespace pizda {
 			
 			MotorSettings cameraPitch {};
 			MotorSettings cameraYaw {};
+
+			MotorSettings* getByType(const MotorType type) {
+				switch (type) {
+					case MotorType::throttle: return &throttle;
+					case MotorType::noseWheel: return &noseWheel;
+
+					case MotorType::flapLeft: return &flapLeft;
+					case MotorType::aileronLeft: return &aileronLeft;
+
+					case MotorType::flapRight: return &flapRight;
+					case MotorType::aileronRight: return &aileronRight;
+
+					case MotorType::tailLeft: return &tailLeft;
+					case MotorType::tailRight: return &tailRight;
+
+					case MotorType::cameraPitch: return &cameraPitch;
+					case MotorType::cameraYaw: return &cameraPitch;
+
+					default: return nullptr;
+				}
+			}
 		
 		protected:
 			const char* getNamespace() override {

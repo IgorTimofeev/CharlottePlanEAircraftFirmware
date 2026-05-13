@@ -57,6 +57,8 @@ namespace pizda {
 
 	class RemoteAuxiliaryMotorConfigurationPacket {
 		public:
+			constexpr static uint8_t typeLengthBits = 4;
+
 			constexpr static uint8_t minLengthBits = 12;
 			constexpr static uint8_t maxLengthBits = minLengthBits;
 	};
