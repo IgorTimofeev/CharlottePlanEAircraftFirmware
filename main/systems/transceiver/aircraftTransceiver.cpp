@@ -44,7 +44,7 @@ namespace pizda {
 					ESP_LOGI(_logTag, "communication settings change timed out, falling back to default");
 
 					// Falling back to default communication settings
-					setCommunicationSettings(config::transceiver::communicationSettings);
+					setCommunicationSettings(config::XCVR::communicationSettings);
 				}
 
 				_communicationSettingsACKTime = 0;
@@ -478,15 +478,11 @@ namespace pizda {
 		))
 			return false;
 
-		ac.remoteData.raw.camera.pitchFactor01 =
-			static_cast<float>(stream.readUint16(RemoteAuxiliaryCameraPacket::pitchLengthBits))
-			/ static_cast<float>((1 << RemoteAuxiliaryCameraPacket::pitchLengthBits) - 1);
+		ac.aircraftData.camera.pitchDeg = stream.readInt16(RemoteAuxiliaryCameraPacket::pitchLengthBits);
+		ac.aircraftData.camera.yawDeg = stream.readInt16(RemoteAuxiliaryCameraPacket::yawLengthBits);
 
-		ac.remoteData.raw.camera.yawFactor01 =
-			static_cast<float>(stream.readUint16(RemoteAuxiliaryCameraPacket::yawLengthBits))
-			/ static_cast<float>((1 << RemoteAuxiliaryCameraPacket::yawLengthBits) - 1);
-
-		ESP_LOGI(_logTag, "Received camera: %f, %f", ac.remoteData.raw.camera.pitchFactor01, ac.remoteData.raw.camera.yawFactor01);
+		config::camera::clamp(ac.aircraftData.camera.pitchDeg, ac.aircraftData.camera.yawDeg);
+		config::camera::correctPitchPitchForYaw(ac.aircraftData.camera.pitchDeg, ac.aircraftData.camera.yawDeg);
 
 		return true;
 	}
@@ -693,24 +689,6 @@ namespace pizda {
 				* ((1 << AircraftTelemetrySecondaryPacket::throttleLengthBits) - 1)
 				/ MotorSettings::powerMax,
 			AircraftTelemetrySecondaryPacket::throttleLengthBits
-		);
-
-		// -------------------------------- Camera --------------------------------
-
-		// Pitch
-		stream.writeUint8(
-			static_cast<uint32_t>(ac.motors.getByType(MotorType::cameraPitch)->getRawPower())
-				* ((1 << AircraftTelemetrySecondaryPacket::cameraPitchLengthBits) - 1)
-				/ MotorSettings::powerMax,
-			AircraftTelemetrySecondaryPacket::cameraPitchLengthBits
-		);
-
-		// Yaw
-		stream.writeUint8(
-			static_cast<uint32_t>(ac.motors.getByType(MotorType::cameraYaw)->getRawPower())
-				* ((1 << AircraftTelemetrySecondaryPacket::cameraYawLengthBits) - 1)
-				/ MotorSettings::powerMax,
-			AircraftTelemetrySecondaryPacket::cameraYawLengthBits
 		);
 
 		// -------------------------------- Lat / lon --------------------------------

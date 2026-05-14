@@ -56,25 +56,6 @@ namespace pizda {
 					constexpr static uint32_t voltageDividerR2 = 51'000;
 			};
 
-			class motors {
-				public:
-					constexpr static uint8_t cameraHorizontal = 0;
-					constexpr static uint8_t cameraVertical = 1;
-
-					constexpr static uint8_t throttle = 2;
-					constexpr static uint8_t noseWheel = 3;
-					constexpr static uint8_t reverse = 4;
-
-					constexpr static uint8_t flapLeft = 5;
-					constexpr static uint8_t aileronLeft = 6;
-
-					constexpr static uint8_t flapRight = 7;
-					constexpr static uint8_t aileronRight = 8;
-
-					constexpr static uint8_t tailLeft = 9;
-					constexpr static uint8_t tailRight = 10;
-			};
-
 			class lights {
 				public:
 					class cabin {
@@ -101,17 +82,17 @@ namespace pizda {
 					};
 			};
 
-			class pwmu {
+			class PWMU {
 				public:
 					constexpr static uint8_t I2CAddress =  PCA9685::I2CBaseAddress | 0b0000'0000;
 					constexpr static uint32_t I2CFrequencyHz = PCA9685::I2CDefaultFrequency;
 			};
 
-			class adirs {
+			class ADIRS {
 				public:
 					constexpr static uint8_t unitCount = 1;
 
-					class adiru0 {
+					class ADIRU0 {
 						public:
 							constexpr static uint8_t mpu9250I2CAddress = 0x68;
 							constexpr static uint8_t bmp280I2CAddress = 0x76;
@@ -121,7 +102,7 @@ namespace pizda {
 					};
 			};
 
-			class transceiver {
+			class XCVR {
 				public:
 					constexpr static gpio_num_t SS = GPIO_NUM_7;
 					constexpr static gpio_num_t busy = GPIO_NUM_8;
@@ -150,8 +131,63 @@ namespace pizda {
 					constexpr static gpio_num_t rx = GPIO_NUM_NC;
 					constexpr static gpio_num_t tx = GPIO_NUM_NC;
 			};
-			
-			class flyByWire {
+
+			class camera {
+				public:
+					constexpr static int16_t servoAngularRangeDeg = 180;
+					constexpr static int16_t servoMaxDeg = servoAngularRangeDeg / 2;
+					constexpr static int16_t servoMinDeg = -servoMaxDeg;
+
+					constexpr static int16_t pitchMinDeg = servoMinDeg;
+					constexpr static int16_t pitchMaxDeg = 10;
+
+					constexpr static int16_t yawMinDeg = servoMinDeg;
+					constexpr static int16_t yawMaxDeg = servoMaxDeg;
+
+					constexpr static int16_t pitchCorrectionYawThresholdMinDeg = 40;
+					constexpr static int16_t pitchCorrectionYawThresholdMaxDeg = std::min<int16_t>(yawMaxDeg, 90);
+					constexpr static int16_t pitchCorrectionByMaxDeg = 30;
+
+					static void clamp(int16_t& pitch, int16_t& yaw) {
+						pitch = std::clamp<int16_t>(
+							std::clamp<int16_t>(
+								pitch,
+								pitchMinDeg,
+								pitchMaxDeg
+							),
+							servoMinDeg,
+							servoMaxDeg
+						);
+
+						yaw = std::clamp<int16_t>(
+							std::clamp<int16_t>(
+								yaw,
+								yawMinDeg,
+								yawMaxDeg
+							),
+							servoMinDeg,
+							servoMaxDeg
+						);
+					}
+
+					static void correctPitchPitchForYaw(int16_t& pitch, int16_t yaw) {
+						// Yaw abs
+						if (yaw < 0)
+							yaw = -yaw;
+
+						// Nothing to do
+						if (yaw <= pitchCorrectionYawThresholdMinDeg)
+							return;
+
+						// Changing pitch by difference between yaw and min/max threshold
+						pitch +=
+							static_cast<int16_t>(pitchCorrectionByMaxDeg)
+							* (yaw - pitchCorrectionYawThresholdMinDeg)
+							/ (pitchCorrectionYawThresholdMaxDeg - pitchCorrectionYawThresholdMinDeg);
+					}
+			};
+
+			class FBW {
 				public:
 					// How many meters between selected and indicated altitude are required to switch from FLC mode to ALTS mode
 					constexpr static float altitudeDeltaForFLCToALTSSwitchM = Units::convertDistance(50.f, DistanceUnit::foot, DistanceUnit::meter);

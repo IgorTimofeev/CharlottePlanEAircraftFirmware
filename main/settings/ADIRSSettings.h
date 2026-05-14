@@ -24,7 +24,7 @@ namespace pizda {
 			uint32_t referencePressurePa = 0;
 			int16_t magneticDeclinationDeg = 0;
 
-			std::array<ADIRSSettingsUnit, config::adirs::unitCount> units {};
+			std::array<ADIRSSettingsUnit, config::ADIRS::unitCount> units {};
 
 		protected:
 			const char* getNamespace() override {
@@ -42,8 +42,8 @@ namespace pizda {
 					if (readUnitCount <= 0)
 						return;
 
-					if (readUnitCount != config::adirs::unitCount) {
-						ESP_LOGI("ADIRSSettings", "read units length (%d) != config length (%d)", readUnitCount, config::adirs::unitCount);
+					if (readUnitCount != config::ADIRS::unitCount) {
+						ESP_LOGI("ADIRSSettings", "read units length (%d) != config length (%d)", readUnitCount, config::ADIRS::unitCount);
 						return;
 					}
 

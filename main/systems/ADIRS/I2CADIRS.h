@@ -37,13 +37,13 @@ namespace pizda {
 		private:
 			std::array<I2CADIRSUnit<IMU>, 1> _IMUs {
 				I2CADIRSUnit<IMU> {
-					config::adirs::adiru0::mpu9250I2CAddress
+					config::ADIRS::ADIRU0::mpu9250I2CAddress
 				}
 			};
 
 			std::array<I2CADIRSUnit<BMP280>, 1> _BMPs {
 				I2CADIRSUnit<BMP280> {
-					config::adirs::adiru0::bmp280I2CAddress
+					config::ADIRS::ADIRU0::bmp280I2CAddress
 				}
 			};
 

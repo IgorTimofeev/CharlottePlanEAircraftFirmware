@@ -7,6 +7,7 @@
 
 #include <units.h>
 #include <lowPassFilter.h>
+#include <sys/stat.h>
 
 #include "config.h"
 #include "aircraft.h"
@@ -183,7 +184,7 @@ namespace pizda {
 
 		if (_verticalMode == AutopilotVerticalMode::flc) {
 			// Was in FLC mode and become close enough to selected altitude
-			if (std::abs(altitudeTargetDeltaM) <= config::flyByWire::altitudeDeltaForFLCToALTSSwitchM) {
+			if (std::abs(altitudeTargetDeltaM) <= config::FBW::altitudeDeltaForFLCToALTSSwitchM) {
 				// Switching to ALTS mode
 				_altitudeHoldM = _altitudeSelectedM;
 				_verticalMode = AutopilotVerticalMode::alts;
@@ -447,8 +448,16 @@ namespace pizda {
 			if (!cameraPitchMotor || !cameraYawMotor)
 				return;
 
-			cameraPitchMotor->setPowerF(ac.remoteData.raw.camera.pitchFactor01);
-			cameraYawMotor->setPowerF(ac.remoteData.raw.camera.yawFactor01);
+			const auto setPower = [](Motor* motor, const int16_t angleDeg) {
+				motor->setPower(
+					(static_cast<int32_t>(angleDeg) - config::camera::servoMinDeg)
+					* static_cast<int32_t>(MotorSettings::powerMax)
+					/ static_cast<int32_t>(config::camera::servoAngularRangeDeg)
+				);
+			};
+
+			setPower(cameraPitchMotor, ac.aircraftData.camera.pitchDeg);
+			setPower(cameraYawMotor, ac.aircraftData.camera.yawDeg);
 		}
 	}
 	

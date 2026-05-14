@@ -51,7 +51,7 @@ namespace pizda {
 
 	class RemoteAuxiliaryCameraPacket {
 		public:
-			constexpr static uint8_t pitchLengthBits = 12;
+			constexpr static uint8_t pitchLengthBits = 9;
 			constexpr static uint8_t yawLengthBits = pitchLengthBits;
 	};
 
@@ -224,9 +224,6 @@ namespace pizda {
 	class AircraftTelemetrySecondaryPacket {
 		public:
 			constexpr static uint8_t throttleLengthBits = 7;
-
-			constexpr static uint8_t cameraPitchLengthBits = 7;
-			constexpr static uint8_t cameraYawLengthBits = cameraPitchLengthBits;
 
 			constexpr static uint8_t latLengthBits = 25;
 			constexpr static uint8_t lonLengthBits = 26;

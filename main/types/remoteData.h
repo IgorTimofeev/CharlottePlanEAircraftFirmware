@@ -15,22 +15,13 @@ namespace pizda {
 			float flaps = 0;
 	};
 
-	class RemoteDataRawCamera {
-		public:
-			// [0.0; 1.0]
-			float pitchFactor01 = 0.5f;
-			float yawFactor01 = 0.5f;
-	};
-	
 	class RemoteDataRaw {
 		public:
 			RemoteDataRawControls controls {};
-			RemoteDataRawCamera camera {};
 	};
-	
+
 	class RemoteDataComputed {
 		public:
-		
 	};
 	
 	class RemoteData {

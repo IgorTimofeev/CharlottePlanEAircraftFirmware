@@ -12,8 +12,8 @@ namespace pizda {
 
 		checkPCA9685Error(_PCA9685.setup(
 			ac.I2CMasterBusHandle,
-			config::pwmu::I2CAddress,
-			config::pwmu::I2CFrequencyHz,
+			config::PWMU::I2CAddress,
+			config::PWMU::I2CFrequencyHz,
 
 			MotorSettings::dutyFrequencyHz,
 			PCA9685OutputDriverMode::totemPole,
@@ -45,17 +45,25 @@ namespace pizda {
 		);
 	}
 
-	Motor* Motors::get(const uint8_t index) {
-		if (index >= _motors.size()) {
-			ESP_LOGI(_logTag, "index %d >= motors count %d", index, _motors.size());
-			return nullptr;
-		}
-		
-		return &_motors[index];
-	}
-	
 	Motor* Motors::getByType(const MotorType type) {
-		return get(std::to_underlying(type));
+		switch (type) {
+			case MotorType::throttle: return &_throttle;
+			case MotorType::noseWheel: return &_noseWheel;
+
+			case MotorType::flapLeft: return &_flapLeft;
+			case MotorType::aileronLeft: return &_aileronLeft;
+
+			case MotorType::flapRight: return &_flapRight;
+			case MotorType::aileronRight: return &_aileronRight;
+
+			case MotorType::tailLeft: return &_tailLeft;
+			case MotorType::tailRight: return &_tailRight;
+
+			case MotorType::cameraPitch: return &_cameraPitch;
+			case MotorType::cameraYaw: return &_cameraPitch;
+
+			default: return nullptr;
+		}
 	}
 
 	bool Motors::checkPCA9685Error(const PCA9685Error error) {
@@ -74,17 +82,19 @@ namespace pizda {
 
 	void Motors::onStart() {
 		while (true) {
-			std::array<uint16_t, _motorCount> duties {};
+			std::array<uint16_t, static_cast<uint8_t>(MotorType::maxValue) + 1> duties {};
 
-			for (uint8_t i = 0; i < _motorCount; ++i) {
+			for (uint8_t i = 0; i < duties.size(); ++i) {
 				// if (i == 5) {
 				// 	ESP_LOGI("motr", "flap power: %d, pulse width: %d, duty: %d", _motors[i].getPower(), _motors[i].getPulseWidthUs(), _motors[i].getDuty());
 				// }
 
-				duties[i] = _motors[i].getDuty();
+				const auto motor = getByType(static_cast<MotorType>(i));
+
+				duties[i] = motor ? motor->getDuty() : 0;
 			}
 
-			checkPCA9685Error(_PCA9685.setDuties<0, _motorCount>(duties));
+			checkPCA9685Error(_PCA9685.setDuties<0, duties.size()>(duties));
 
 			vTaskDelay(pdMS_TO_TICKS(1'000 / 30));
 		}

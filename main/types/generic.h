@@ -9,7 +9,8 @@ namespace pizda {
 	enum class ConnectionState : uint8_t {
 		initial,
 		connected,
-		disconnected
+		disconnected,
+		reconnected
 	};
 
 	enum class AircraftCalibrationSystem : uint8_t {
@@ -53,18 +54,6 @@ namespace pizda {
 
 	class MotorSettings {
 		public:
-			uint16_t min = 1000;
-			uint16_t max = 2000;
-			bool reverse = false;
-
-			void sanitize() {
-				min = std::clamp<uint16_t>(min, 0, 3000);
-				max = std::clamp<uint16_t>(max, 0, 3000);
-
-				if (min > max)
-					std::swap(min, max);
-			}
-
 			constexpr static uint8_t powerResolutionBits = 12;
 			constexpr static uint16_t powerMax = (1 << powerResolutionBits) - 1;
 
@@ -75,6 +64,18 @@ namespace pizda {
 
 			constexpr static uint16_t pulseWidthUsToDuty(const uint16_t pulseWidthUs) {
 				return static_cast<uint32_t>(pulseWidthUs) * dutyMax / dutyCycleDurationUs;
+			}
+
+			uint16_t min = 1000;
+			uint16_t max = 2000;
+			bool reverse = false;
+
+			void sanitize() {
+				min = std::clamp<uint16_t>(min, 0, 3000);
+				max = std::clamp<uint16_t>(max, 0, 3000);
+
+				if (min > max)
+					std::swap(min, max);
 			}
 	};
 

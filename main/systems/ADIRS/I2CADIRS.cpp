@@ -15,7 +15,7 @@ namespace pizda {
 			return;
 
 		// Updating IMU biases from settings
-		for (size_t ADIRUIndex = 0; ADIRUIndex < config::adirs::unitCount; ++ADIRUIndex) {
+		for (size_t ADIRUIndex = 0; ADIRUIndex < config::ADIRS::unitCount; ++ADIRUIndex) {
 			auto& IMU = _IMUs[ADIRUIndex].unit;
 			auto& settingsUnit = ac.settings.adirs.units[ADIRUIndex];
 
@@ -37,7 +37,7 @@ namespace pizda {
 
 		constexpr static uint16_t iterations = 5'000;
 
-		for (size_t ADIRUIndex = 0; ADIRUIndex < config::adirs::unitCount; ++ADIRUIndex) {
+		for (size_t ADIRUIndex = 0; ADIRUIndex < config::ADIRS::unitCount; ++ADIRUIndex) {
 			auto& IMU = _IMUs[ADIRUIndex].unit;
 
 			// Setting calibration attenuation
@@ -90,7 +90,7 @@ namespace pizda {
 
 		constexpr static uint16_t iterations = 2'000;
 
-		for (size_t ADIRUIndex = 0; ADIRUIndex < config::adirs::unitCount; ++ADIRUIndex) {
+		for (size_t ADIRUIndex = 0; ADIRUIndex < config::ADIRS::unitCount; ++ADIRUIndex) {
 			auto& IMU = _IMUs[ADIRUIndex].unit;
 
 			// Setting calibration attenuation

@@ -72,17 +72,17 @@ namespace pizda {
 			virtual bool setup() {
 				const auto error = _SX.setup(
 					config::SPI::device,
-					config::transceiver::SPIFrequencyHz,
+					config::XCVR::SPIFrequencyHz,
 
-					config::transceiver::communicationSettings.frequencyHz,
-					config::transceiver::communicationSettings.bandwidth,
-					config::transceiver::communicationSettings.spreadingFactor,
-					config::transceiver::communicationSettings.codingRate,
-					config::transceiver::communicationSettings.syncWord,
-					config::transceiver::communicationSettings.preambleLength,
+					config::XCVR::communicationSettings.frequencyHz,
+					config::XCVR::communicationSettings.bandwidth,
+					config::XCVR::communicationSettings.spreadingFactor,
+					config::XCVR::communicationSettings.codingRate,
+					config::XCVR::communicationSettings.syncWord,
+					config::XCVR::communicationSettings.preambleLength,
 
-					config::transceiver::communicationSettings.currentLimitMA,
-					config::transceiver::communicationSettings.powerDBm,
+					config::XCVR::communicationSettings.currentLimitMA,
+					config::XCVR::communicationSettings.powerDBm,
 					false
 				);
 
@@ -225,10 +225,10 @@ namespace pizda {
 			constexpr static auto _logTag = "XCVR";
 
 			SX1262::Transceiver _SX {
-				config::transceiver::SS,
-				config::transceiver::busy,
-				config::transceiver::DIO1,
-				config::transceiver::RST
+				config::XCVR::SS,
+				config::XCVR::busy,
+				config::XCVR::DIO1,
+				config::XCVR::RST
 			};
 
 			constexpr static uint16_t _bufferLength = 255;

@@ -15,7 +15,6 @@ namespace pizda {
 	class Motors {
 		public:
 			void setup();
-			Motor* get(uint8_t index);
 			Motor* getByType(MotorType type);
 
 		private:
@@ -23,29 +22,19 @@ namespace pizda {
 
 			PCA9685 _PCA9685 {};
 
-			constexpr static uint8_t _motorCount = static_cast<uint8_t>(MotorType::maxValue) + 1;
-
-			std::array<Motor, _motorCount> _motors {
-				// Camera
-				Motor {},
-				Motor {},
-
-				// Throttle / nose wheel / reverse
-				Motor {},
-				Motor {},
-				Motor {},
-				
-				Motor {},
-				Motor {},
-				
-				Motor {},
-				Motor {},
-				
-				Motor {},
-				Motor {},
-			};
+			Motor _cameraPitch {};
+			Motor _cameraYaw {};
+			Motor _throttle {};
+			Motor _noseWheel {};
+			Motor _reverse {};
+			Motor _flapLeft {};
+			Motor _aileronLeft {};
+			Motor _flapRight {};
+			Motor _aileronRight {};
+			Motor _tailLeft {};
+			Motor _tailRight {};
 
 			static bool checkPCA9685Error(const PCA9685Error error);
-			void onStart();
+			[[noreturn]] void onStart();
 	};
 }
