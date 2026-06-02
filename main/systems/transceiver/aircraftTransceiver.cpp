@@ -74,12 +74,30 @@ namespace pizda {
 
 	void AircraftTransceiver::onConnectionStateChanged() {
 		auto& ac = Aircraft::getInstance();
-		
-		if (isConnected()) {
-			ac.lights.setEmergencyEnabled(false);
-		}
-		else {
-			ac.lights.setEmergencyEnabled(true);
+
+		// ESP_LOGI(_logTag, "onConnectionStateChanged: %d", (uint8_t) getConnectionState());
+
+		switch (getConnectionState()) {
+			case ConnectionState::initial: {
+
+				break;
+			}
+			case ConnectionState::connected: {
+
+				break;
+			}
+			case ConnectionState::disconnected: {
+				ac.fbw.setEmergency(true);
+				ac.lights.setEmergencyEnabled(true);
+
+				break;
+			}
+			case ConnectionState::reconnected: {
+				ac.fbw.setEmergency(false);
+				ac.lights.setEmergencyEnabled(false);
+
+				break;
+			}
 		}
 	}
 	

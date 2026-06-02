@@ -40,6 +40,8 @@ namespace pizda {
 			float getTargetRollRad() const;
 			float getTargetPitchRad() const;
 
+			void setEmergency(bool state);
+
 		private:
 			constexpr static auto _logTag = "FlyByWire";
 			
@@ -72,6 +74,7 @@ namespace pizda {
 
 			bool _autothrottleEnabled = false;
 			bool _autopilotEngaged = false;
+			bool _emergency = false;
 
 			static float predictValue(float valueDelta, float deltaTimeS, float dueTimeS);
 			

@@ -108,6 +108,10 @@ namespace pizda {
 		return _pitchTargetRad;
 	}
 
+	void FlyByWire::setEmergency(const bool state) {
+		_emergency = state;
+	}
+
 	float FlyByWire::predictValue(const float valueDelta, const float deltaTimeS, const float dueTimeS) {
 		// valueDelta - deltaTimeS
 		// x          - dueTimeS
@@ -131,49 +135,58 @@ namespace pizda {
 		// -------------------------------- Lateral --------------------------------
 
 		{
-			if (_lateralMode == AutopilotLateralMode::stab && _autopilotEngaged) {
-				_rollTargetRad = std::clamp(
-					_rollTargetRad
-						+ (ac.remoteData.raw.controls.ailerons * 2 - 1)
-						* ac.settings.autopilot.stabilizedModeRollAngleIncrementRadPerSecond
-						* deltaTimeS,
-					-ac.settings.autopilot.maxRollAngleRad,
-					ac.settings.autopilot.maxRollAngleRad
+			if (_emergency) {
+				_rollTargetRad = LowPassFilter::applyToAngle(
+					_rollTargetRad,
+					0,
+					LowPassFilter::getDeltaTimeSFactor(ac.settings.autopilot.rollAngleLPFFactorPerSecond, deltaTimeS)
 				);
 			}
 			else {
-				float rollTargetRad = 0;
-
-				switch (_lateralMode) {
-					case AutopilotLateralMode::hdg: {
-						const auto yawTargetRad = -normalizeAngleRadPi(toRadians(static_cast<float>(_headingSelectedDeg)));
-						const auto yawTargetDeltaRad = normalizeAngleRadPi(yawTargetRad - yawRad);
-
-						rollTargetRad = _yawDeltaToRollPID.tick(
-							yawTargetDeltaRad,
-							0,
-
-							ac.settings.autopilot.PIDs.yawToRoll.p,
-							ac.settings.autopilot.PIDs.yawToRoll.i,
-							ac.settings.autopilot.PIDs.yawToRoll.d,
-
-							deltaTimeS,
-
-							-ac.settings.autopilot.maxRollAngleRad,
-							ac.settings.autopilot.maxRollAngleRad
-						);
-
-						break;
-					}
-					default:
-						break;
+				if (_lateralMode == AutopilotLateralMode::stab && _autopilotEngaged) {
+					_rollTargetRad = std::clamp(
+						_rollTargetRad
+							+ (ac.remoteData.raw.controls.ailerons * 2 - 1)
+							* ac.settings.autopilot.stabilizedModeRollAngleIncrementRadPerSecond
+							* deltaTimeS,
+						-ac.settings.autopilot.maxRollAngleRad,
+						ac.settings.autopilot.maxRollAngleRad
+					);
 				}
+				else {
+					float rollTargetRad = 0;
 
-				_rollTargetRad = LowPassFilter::applyToAngle(
-					_rollTargetRad,
-					rollTargetRad,
-					LowPassFilter::getDeltaTimeSFactor(ac.settings.autopilot.rollAngleLPFFactorPerSecond, deltaTimeS)
-				);
+					switch (_lateralMode) {
+						case AutopilotLateralMode::hdg: {
+							const auto yawTargetRad = -normalizeAngleRadPi(toRadians(static_cast<float>(_headingSelectedDeg)));
+							const auto yawTargetDeltaRad = normalizeAngleRadPi(yawTargetRad - yawRad);
+
+							rollTargetRad = _yawDeltaToRollPID.tick(
+								yawTargetDeltaRad,
+								0,
+
+								ac.settings.autopilot.PIDs.yawToRoll.p,
+								ac.settings.autopilot.PIDs.yawToRoll.i,
+								ac.settings.autopilot.PIDs.yawToRoll.d,
+
+								deltaTimeS,
+
+								-ac.settings.autopilot.maxRollAngleRad,
+								ac.settings.autopilot.maxRollAngleRad
+							);
+
+							break;
+						}
+						default:
+							break;
+					}
+
+					_rollTargetRad = LowPassFilter::applyToAngle(
+						_rollTargetRad,
+						rollTargetRad,
+						LowPassFilter::getDeltaTimeSFactor(ac.settings.autopilot.rollAngleLPFFactorPerSecond, deltaTimeS)
+					);
+				}
 			}
 		}
 
@@ -206,51 +219,38 @@ namespace pizda {
 		const auto speedLow = speedTargetDeltaMPS > 0;
 
 		{
-			if (_verticalMode == AutopilotVerticalMode::stab && _autopilotEngaged) {
-				_pitchTargetRad = std::clamp(
-					_pitchTargetRad
-						- (ac.remoteData.raw.controls.elevator * 2 - 1)
-						* ac.settings.autopilot.stabilizedModePitchAngleIncrementRadPerSecond
-						* deltaTimeS,
-					-ac.settings.autopilot.maxPitchAngleRad,
-					ac.settings.autopilot.maxPitchAngleRad
+			if (_emergency) {
+				_pitchTargetRad = LowPassFilter::applyToAngle(
+					_pitchTargetRad,
+					0,
+					LowPassFilter::getDeltaTimeSFactor(ac.settings.autopilot.pitchAngleLPFFactorPerSecond, deltaTimeS)
 				);
 			}
 			else {
-				float pitchTargetRad = 0;
+				if (_verticalMode == AutopilotVerticalMode::stab && _autopilotEngaged) {
+					_pitchTargetRad = std::clamp(
+						_pitchTargetRad
+							- (ac.remoteData.raw.controls.elevator * 2 - 1)
+							* ac.settings.autopilot.stabilizedModePitchAngleIncrementRadPerSecond
+							* deltaTimeS,
+						-ac.settings.autopilot.maxPitchAngleRad,
+						ac.settings.autopilot.maxPitchAngleRad
+					);
+				}
+				else {
+					float pitchTargetRad = 0;
 
-				switch (_verticalMode) {
-					case AutopilotVerticalMode::alts:
-					case AutopilotVerticalMode::alt: {
-						// Relying on altitude difference, speed doesn't matter
-						pitchTargetRad = _altitudeToPitchPID.tick(
-							altitudeTargetDeltaM,
-							0,
-
-							ac.settings.autopilot.PIDs.altitudeToPitch.p,
-							ac.settings.autopilot.PIDs.altitudeToPitch.i,
-							ac.settings.autopilot.PIDs.altitudeToPitch.d,
-
-							deltaTimeS,
-
-							-1.f,
-							1.f
-						);
-
-						pitchTargetRad = -ac.settings.autopilot.maxPitchAngleRad * pitchTargetRad;
-
-						break;
-					}
-					case AutopilotVerticalMode::flc: {
-						// Relying on speed difference, altitude doesn't matter
-						if ((altitudeLow && !speedLow) || (!altitudeLow && speedLow)) {
-							pitchTargetRad = _speedToPitchPID.tick(
-								speedTargetDeltaMPS,
+					switch (_verticalMode) {
+						case AutopilotVerticalMode::alts:
+						case AutopilotVerticalMode::alt: {
+							// Relying on altitude difference, speed doesn't matter
+							pitchTargetRad = _altitudeToPitchPID.tick(
+								altitudeTargetDeltaM,
 								0,
 
-								ac.settings.autopilot.PIDs.speedToPitch.p,
-								ac.settings.autopilot.PIDs.speedToPitch.i,
-								ac.settings.autopilot.PIDs.speedToPitch.d,
+								ac.settings.autopilot.PIDs.altitudeToPitch.p,
+								ac.settings.autopilot.PIDs.altitudeToPitch.i,
+								ac.settings.autopilot.PIDs.altitudeToPitch.d,
 
 								deltaTimeS,
 
@@ -258,27 +258,49 @@ namespace pizda {
 								1.f
 							);
 
-							pitchTargetRad = ac.settings.autopilot.maxPitchAngleRad * pitchTargetRad;
+							pitchTargetRad = -ac.settings.autopilot.maxPitchAngleRad * pitchTargetRad;
+
+							break;
 						}
+						case AutopilotVerticalMode::flc: {
+							// Relying on speed difference, altitude doesn't matter
+							if ((altitudeLow && !speedLow) || (!altitudeLow && speedLow)) {
+								pitchTargetRad = _speedToPitchPID.tick(
+									speedTargetDeltaMPS,
+									0,
 
-						break;
+									ac.settings.autopilot.PIDs.speedToPitch.p,
+									ac.settings.autopilot.PIDs.speedToPitch.i,
+									ac.settings.autopilot.PIDs.speedToPitch.d,
+
+									deltaTimeS,
+
+									-1.f,
+									1.f
+								);
+
+								pitchTargetRad = ac.settings.autopilot.maxPitchAngleRad * pitchTargetRad;
+							}
+
+							break;
+						}
+						default: {
+							break;
+						}
 					}
-					default: {
-						break;
-					}
+
+					_pitchTargetRad = LowPassFilter::applyToAngle(
+						_pitchTargetRad,
+						pitchTargetRad,
+						LowPassFilter::getDeltaTimeSFactor(ac.settings.autopilot.pitchAngleLPFFactorPerSecond, deltaTimeS)
+					);
 				}
-
-				_pitchTargetRad = LowPassFilter::applyToAngle(
-					_pitchTargetRad,
-					pitchTargetRad,
-					LowPassFilter::getDeltaTimeSFactor(ac.settings.autopilot.pitchAngleLPFFactorPerSecond, deltaTimeS)
-				);
 			}
 		}
 
 		// -------------------------------- Ailerons --------------------------------
 
-		if (_autopilotEngaged && _lateralMode != AutopilotLateralMode::dir) {
+		if (_emergency || (_autopilotEngaged && _lateralMode != AutopilotLateralMode::dir)) {
 			const auto rollTargetDeltaRad = normalizeAngleRadPi(_rollTargetRad - rollRad);
 
 			_aileronsFactor = _rollToAileronsPID.tick(
@@ -304,7 +326,7 @@ namespace pizda {
 
 		// -------------------------------- Elevator --------------------------------
 
-		if (_autopilotEngaged && _verticalMode != AutopilotVerticalMode::dir) {
+		if (_emergency || (_autopilotEngaged && _verticalMode != AutopilotVerticalMode::dir)) {
 			const auto pitchTargetDeltaRad = normalizeAngleRadPi(_pitchTargetRad - pitchRad);
 
 			_elevatorFactor = _pitchToElevatorPID.tick(
@@ -330,52 +352,60 @@ namespace pizda {
 
 		// -------------------------------- Rudder --------------------------------
 
-		_rudderFactor = std::clamp(ac.remoteData.raw.controls.rudder + ac.settings.trim.rudderTrim, 0.f, 1.f);
+		_rudderFactor =
+			_emergency
+			? 0.5f
+			: std::clamp(ac.remoteData.raw.controls.rudder + ac.settings.trim.rudderTrim, 0.f, 1.f);
 
 		// -------------------------------- Throttle --------------------------------
 
-		if (_autothrottleEnabled) {
-			// FLC
-			if (_autopilotEngaged && _verticalMode == AutopilotVerticalMode::flc) {
-				_throttleFactor =
-					static_cast<float>(
-						altitudeLow
-						? ac.settings.autopilot.maxThrottlePercent
-						: ac.settings.autopilot.minThrottlePercent
-					)
-					/ 100.f;
-			}
-			// Others
-			else {
-				_throttleFactor = _speedToThrottlePID.tick(
-					-speedTargetDeltaMPS,
-					0,
-
-					ac.settings.autopilot.PIDs.speedToThrottle.p,
-					ac.settings.autopilot.PIDs.speedToThrottle.i,
-					ac.settings.autopilot.PIDs.speedToThrottle.d,
-
-					deltaTimeS,
-
-					-1.f,
-					1.f
-				);
-
-				// Mapping from [-1; 1] to [0; 1]
-				_throttleFactor = (_throttleFactor + 1.f) / 2.f;
-
-				_throttleFactor =
-					// Min
-					static_cast<float>(ac.settings.autopilot.minThrottlePercent) / 100.f
-					// Factor
-					+ _throttleFactor
-					// Max - min
-					* static_cast<float>(ac.settings.autopilot.maxThrottlePercent - ac.settings.autopilot.minThrottlePercent) / 100.f;
-
-			}
+		if (_emergency) {
+			_throttleFactor = 0.0f;
 		}
 		else {
-			_throttleFactor = ac.remoteData.raw.controls.throttle;
+			if (_autothrottleEnabled) {
+				// FLC
+				if (_autopilotEngaged && _verticalMode == AutopilotVerticalMode::flc) {
+					_throttleFactor =
+						static_cast<float>(
+							altitudeLow
+							? ac.settings.autopilot.maxThrottlePercent
+							: ac.settings.autopilot.minThrottlePercent
+						)
+						/ 100.f;
+				}
+				// Others
+				else {
+					_throttleFactor = _speedToThrottlePID.tick(
+						-speedTargetDeltaMPS,
+						0,
+
+						ac.settings.autopilot.PIDs.speedToThrottle.p,
+						ac.settings.autopilot.PIDs.speedToThrottle.i,
+						ac.settings.autopilot.PIDs.speedToThrottle.d,
+
+						deltaTimeS,
+
+						-1.f,
+						1.f
+					);
+
+					// Mapping from [-1; 1] to [0; 1]
+					_throttleFactor = (_throttleFactor + 1.f) / 2.f;
+
+					_throttleFactor =
+						// Min
+						static_cast<float>(ac.settings.autopilot.minThrottlePercent) / 100.f
+						// Factor
+						+ _throttleFactor
+						// Max - min
+						* static_cast<float>(ac.settings.autopilot.maxThrottlePercent - ac.settings.autopilot.minThrottlePercent) / 100.f;
+
+				}
+			}
+			else {
+				_throttleFactor = ac.remoteData.raw.controls.throttle;
+			}
 		}
 	}
 
@@ -386,10 +416,8 @@ namespace pizda {
 		{
 			const auto motor = ac.motors.getByType(MotorType::throttle);
 			
-			if (!motor)
-				return;
-			
-			motor->setPowerF(_throttleFactor);
+			if (motor)
+				motor->setPowerF(_throttleFactor);
 		}
 		
 		// Ailerons
@@ -425,6 +453,7 @@ namespace pizda {
 
 				leftTailMotor->setPowerF(leftPower);
 				rightTailMotor->setPowerF(rightPower);
+
 			#endif
 
 			// Nose wheel
@@ -459,14 +488,13 @@ namespace pizda {
 				);
 			};
 
-
 			// ESP_LOGI("cam", "pitch: %d, yaw: %d", ac.aircraftData.camera.pitchDeg, ac.aircraftData.camera.yawDeg);
 
 			setPower(cameraPitchMotor, ac.aircraftData.camera.pitchDeg);
 			setPower(cameraYawMotor, ac.aircraftData.camera.yawDeg);
 		}
 	}
-	
+
 	[[noreturn]] void FlyByWire::onStart() {
 		_computationTimeUs = esp_timer_get_time();
 

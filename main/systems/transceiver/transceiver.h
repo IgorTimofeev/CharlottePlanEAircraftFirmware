@@ -131,8 +131,18 @@ namespace pizda {
 						if (onReceive(stream, packetType, payloadLength)) {
 							_connectionLostTimeUs = esp_timer_get_time() + _connectionLostIntervalUs;
 
-							if (_connectionState != ConnectionState::connected)
-								setConnectionState(ConnectionState::connected);
+							switch (_connectionState) {
+								case ConnectionState::initial: {
+									setConnectionState(ConnectionState::connected);
+									break;
+								}
+								case ConnectionState::disconnected: {
+									setConnectionState(ConnectionState::reconnected);
+									break;
+								}
+								default:
+									break;
+							}
 
 							_RXPPSTemp++;
 
@@ -147,8 +157,12 @@ namespace pizda {
 					logSXError("receive error", error);
 				}
 
-				if (_connectionState == ConnectionState::connected && esp_timer_get_time() >= _connectionLostTimeUs)
+				if (
+					(_connectionState == ConnectionState::connected || _connectionState == ConnectionState::reconnected)
+					&& esp_timer_get_time() >= _connectionLostTimeUs
+				) {
 					setConnectionState(ConnectionState::disconnected);
+				}
 
 				return false;
 			}
