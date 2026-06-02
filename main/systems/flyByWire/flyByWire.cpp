@@ -398,7 +398,7 @@ namespace pizda {
 			const auto rightAileronMotor = ac.motors.getByType(MotorType::aileronRight);
 
 			leftAileronMotor->setPowerF(_aileronsFactor);
-			rightAileronMotor->setPowerF(_aileronsFactor);
+			rightAileronMotor->setPowerF(1.f - _aileronsFactor);
 		}
 		
 		// Elevator & rudder
@@ -406,6 +406,9 @@ namespace pizda {
 			const auto leftTailMotor = ac.motors.getByType(MotorType::tailLeft);
 			const auto rightTailMotor = ac.motors.getByType(MotorType::tailRight);
 			const auto noseWheelMotor = ac.motors.getByType(MotorType::noseWheel);
+
+			// ESP_LOGI(_logTag, "raw rudder: %f, elevator: %f", ac.remoteData.raw.controls.rudder, ac.remoteData.raw.controls.elevator);
+			// ESP_LOGI(_logTag, "factors rudder: %f, elevator: %f", _rudderFactor, _elevatorFactor);
 
 			#ifdef SIM
 				leftTailMotor->setPowerF(_elevatorFactor);
@@ -415,10 +418,10 @@ namespace pizda {
 				// V-tail mixing
 				const auto elevatorPowerShifted = _elevatorFactor * 2 - 1;
 				const auto rudderPowerShifted = _rudderFactor * 2 - 1;
-				const auto leftPower = (std::clamp(elevatorPowerShifted + rudderPowerShifted, -1.f, 1.f) + 1.f) / 2.f;
-				const auto rightPower = (std::clamp(elevatorPowerShifted - rudderPowerShifted, -1.f, 1.f) + 1.f) / 2.f;
+				const auto leftPower = (std::clamp(elevatorPowerShifted - rudderPowerShifted, -1.f, 1.f) + 1.f) / 2.f;
+				const auto rightPower = (std::clamp(elevatorPowerShifted + rudderPowerShifted, -1.f, 1.f) + 1.f) / 2.f;
 
-				// ESP_LOGI(_logTag, "elevatorPower: %f, rudderPower: %f, leftPower: %f, rightPower: %f", _elevatorTargetFactor, _rudderFactor, leftPower, rightPower);
+				// ESP_LOGI(_logTag, "tail power left: %f, left: %f", leftPower, rightPower);
 
 				leftTailMotor->setPowerF(leftPower);
 				rightTailMotor->setPowerF(rightPower);
@@ -456,6 +459,9 @@ namespace pizda {
 				);
 			};
 
+
+			// ESP_LOGI("cam", "pitch: %d, yaw: %d", ac.aircraftData.camera.pitchDeg, ac.aircraftData.camera.yawDeg);
+
 			setPower(cameraPitchMotor, ac.aircraftData.camera.pitchDeg);
 			setPower(cameraYawMotor, ac.aircraftData.camera.yawDeg);
 		}
@@ -469,6 +475,7 @@ namespace pizda {
 			applyData();
 			
 			vTaskDelay(pdMS_TO_TICKS(1'000 / _tickFrequencyHz));
+			// vTaskDelay(pdMS_TO_TICKS(1'000 / 1));
 		}
 	}
 }

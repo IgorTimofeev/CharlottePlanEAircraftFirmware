@@ -23,14 +23,17 @@ namespace pizda {
 			true
 		));
 
-		for (uint8_t mt = 0; mt < static_cast<uint8_t>(MotorType::maxValue); ++mt) {
+		for (uint8_t mt = 0; mt < static_cast<uint8_t>(MotorType::maxValue) + 1; ++mt) {
 			const auto motorType = static_cast<MotorType>(mt);
 
 			const auto motor = getByType(motorType);
 			const auto settings = ac.settings.motors.getByType(motorType);
 
-			if (motor && settings)
+			if (motor && settings) {
 				motor->setSettings(settings);
+
+				// ESP_LOGI(_logTag, "loaded type: %d, min: %d, max: %d, reverse: %d", static_cast<uint8_t>(motorType), settings->min, settings->max, settings->reverse);
+			}
 		}
 
 		xTaskCreate(
@@ -60,7 +63,7 @@ namespace pizda {
 			case MotorType::tailRight: return &_tailRight;
 
 			case MotorType::cameraPitch: return &_cameraPitch;
-			case MotorType::cameraYaw: return &_cameraPitch;
+			case MotorType::cameraYaw: return &_cameraYaw;
 
 			default: return nullptr;
 		}
