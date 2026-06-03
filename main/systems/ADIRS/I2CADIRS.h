@@ -26,12 +26,11 @@ namespace pizda {
 	class I2CADIRS : public ADIRS {
 		public:
 			void setup() override;
+			void setHomeCoordinates(const GeoCoordinates& homeCoordinates) override;
 
 		protected:
 			void onCalibrateAccelAndGyro() override;
-
 			void onCalibrateMag() override;
-
 			void onTick() override;
 
 		private:

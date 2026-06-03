@@ -60,8 +60,12 @@ namespace pizda {
 		return _slipAndSkidFactor;
 	}
 
-	const GeoCoordinates& ADIRS::getStartCoordinates() const {
-		return _startCoordinates;
+	const GeoCoordinates& ADIRS::getHomeCoordinates() const {
+		return _homeCoordinates;
+	}
+
+	void ADIRS::setHomeCoordinates(const GeoCoordinates& homeCoordinates) {
+		_homeCoordinates = homeCoordinates;
 	}
 
 	const GeoCoordinates& ADIRS::getCoordinates() const {

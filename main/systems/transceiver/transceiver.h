@@ -206,7 +206,7 @@ namespace pizda {
 			}
 
 			bool isConnected() const {
-				return _connectionState == ConnectionState::connected;
+				return _connectionState == ConnectionState::connected || _connectionState == ConnectionState::reconnected;
 			}
 
 			void enqueueSystemPacket(TLocalSystemPacketType type) {
@@ -421,6 +421,42 @@ namespace pizda {
 					static_cast<uint16_t>(std::round(factor * static_cast<float>((1 << lengthBits) - 1))),
 					lengthBits
 				);
+			}
+
+			static float readLatitude(BitStream& stream, const uint8_t lengthBits) {
+				// [0.0; 1.0]
+				const auto latFactor =
+					static_cast<float>(stream.readUint32(lengthBits))
+					/ static_cast<float>((1 << lengthBits) - 1);
+
+				// [-pi / 2; pi / 2]
+				return latFactor * std::numbers::pi_v<float> - std::numbers::pi_v<float> / 2.f;
+			}
+
+			static void writeLatitude(BitStream& stream, const float latRad, const uint8_t lengthBits) {
+				// Mapping from [-90; 90] to [0; 180] and then to [0; 1]
+				const auto latFactor = (latRad + std::numbers::pi_v<float> / 2.f) / std::numbers::pi_v<float>;
+				const auto latValue = static_cast<uint32_t>(static_cast<float>((1 << lengthBits) - 1) * latFactor);
+
+				stream.writeUint32(latValue, lengthBits);
+			}
+
+			static float readLongitude(BitStream& stream, const uint8_t lengthBits) {
+				// [0.0; 1.0]
+				const auto lonFactor =
+					static_cast<float>(stream.readUint32(lengthBits))
+					/ static_cast<float>((1 << lengthBits) - 1);
+
+				// [-pi; pi]
+				return lonFactor * std::numbers::pi_v<float> * 2;
+			}
+
+			static void writeLongitude(BitStream& stream, const float lonRad, const uint8_t lengthBits) {
+				// Mapping from [0; 360] to [0; 1]
+				const auto lonFactor = lonRad / (2 * std::numbers::pi_v<float>);
+				const auto lonValue = static_cast<uint32_t>(static_cast<float>((1 << lengthBits) - 1) * lonFactor);
+
+				stream.writeUint32(lonValue, lengthBits);
 			}
 
 			virtual void onStart() = 0;

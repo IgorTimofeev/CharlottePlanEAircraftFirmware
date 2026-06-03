@@ -51,15 +51,24 @@ namespace pizda {
 	}
 
 	float IMU::getIntegratedLatitudeRad() const {
-		return _integratedRelativeLatitudeRad;
+		return _integratedLatitudeRad;
 	}
 
 	float IMU::getIntegratedLongitudeRad() const {
-    	return _integratedRelativeLongitudeRad;
+    	return _integratedLongitudeRad;
     }
 
 	float IMU::getIntegratedVelocityMs() const {
 		return _integratedVelocityMs;
+	}
+
+	void IMU::resetIntegratedCoordinates() {
+    	_integratedTiltCompensatedVelocityMs = {};
+		_integratedAlignedPositionM = {};
+
+    	_integratedVelocityMs = 0;
+    	_integratedLongitudeRad = 0;
+    	_integratedLongitudeRad = 0;
 	}
 
 	void IMU::setCalibrationMode() {
@@ -287,8 +296,8 @@ namespace pizda {
     		_integratedAlignedPositionM.getY(),
     		_integratedAlignedPositionM.getX(),
 
-    		_integratedRelativeLatitudeRad,
-    		_integratedRelativeLongitudeRad
+    		_integratedLatitudeRad,
+    		_integratedLongitudeRad
 		);
 
 		_FIFOTickTimeUs = esp_timer_get_time() + FIFOTickIntervalUs;

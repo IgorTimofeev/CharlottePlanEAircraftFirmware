@@ -25,7 +25,10 @@ namespace pizda {
 //			float _speed = 0;
 			
 			float getSlipAndSkidFactor() const;
-			const GeoCoordinates& getStartCoordinates() const;
+
+			const GeoCoordinates& getHomeCoordinates() const;
+			virtual void setHomeCoordinates(const GeoCoordinates& homeCoordinates);
+
 			const GeoCoordinates& getCoordinates() const;
 			void setReferencePressurePa(const uint32_t value);
 			float getAirspeedMs() const;
@@ -85,13 +88,13 @@ namespace pizda {
 
 			// От греха подальше, а то, блядь, по Кронштадту ебнули сегодня, и нормальным авиамоделистам
 			// из-за такой хуйни остается лишь сосать бибу
-			GeoCoordinates _startCoordinates {
+			GeoCoordinates _homeCoordinates {
 				toRadians(59.812414f),
 				toRadians(30.555595f),
 				0
 			};
 
-			GeoCoordinates _coordinates = _startCoordinates;
+			GeoCoordinates _coordinates = _homeCoordinates;
 			
 			[[noreturn]] void onStart();
 	};

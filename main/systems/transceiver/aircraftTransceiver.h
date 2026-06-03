@@ -38,23 +38,6 @@ namespace pizda {
 			TransceiverCommunicationSettings _tmpCommunicationSettings {};
 			int64_t _communicationSettingsACKTime = 0;
 
-			bool receiveRemoteControlsPacket(BitStream& stream, uint8_t payloadLength);
-			bool receiveRemoteSystemTrimPacket(BitStream& stream, uint8_t payloadLength);
-			bool receiveRemoteSystemLightsPacket(BitStream& stream, uint8_t payloadLength);
-			bool receiveRemoteSystemBaroPacket(BitStream& stream, uint8_t payloadLength);
-			bool receiveRemoteSystemAutopilotPacket(BitStream& stream, uint8_t payloadLength);
-			bool receiveRemoteSystemCameraPacket(BitStream& stream, uint8_t payloadLength);
-			bool receiveRemoteSystemMotorsPacket(BitStream& stream, uint8_t payloadLength);
-			bool receiveRemoteSystemADIRSPacket(BitStream& stream, uint8_t payloadLength);
-			bool receiveRemoteSystemXCVRPacket(BitStream& stream, uint8_t payloadLength);
-			bool receiveRemoteSystemCalibratePacket(BitStream& stream, uint8_t payloadLength);
-
-			void transmitAircraftSTierTelemetryPacket(BitStream& stream);
-			void transmitAircraftATierTelemetryPacket(BitStream& stream);
-			void transmitAircraftBTierTelemetryPacket(BitStream& stream);
-
 			void transmitAircraftSystemPacket(BitStream& stream);
-			void transmitAircraftSystemCalibrationPacket(BitStream& stream);
-			void transmitAircraftSystemCommunicationSettingsACKPacket(BitStream& stream);
 	};
 }

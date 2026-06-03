@@ -30,6 +30,14 @@ namespace pizda {
 		ADIRS::setup();
 	}
 
+	void I2CADIRS::setHomeCoordinates(const GeoCoordinates& homeCoordinates) {
+		ADIRS::setHomeCoordinates(homeCoordinates);
+
+		for (auto& IMU : _IMUs) {
+			IMU.unit.resetIntegratedCoordinates();
+		}
+	}
+
 	void I2CADIRS::onCalibrateAccelAndGyro() {
 		ESP_LOGI(_logTag, "Accel & gyro calibration started");
 
@@ -194,9 +202,9 @@ namespace pizda {
 		integratedLatitudeRadSum /= _IMUs.size();
 		integratedLongitudeRadSum /= _IMUs.size();
 
-		const auto& startCoordinates = getStartCoordinates();
-		setLatitude(startCoordinates.getLatitude() + integratedLatitudeRadSum);
-		setLongitude(startCoordinates.getLongitude() + integratedLongitudeRadSum);
+		const auto& homeCoordinates = getHomeCoordinates();
+		setLatitude(homeCoordinates.getLatitude() + integratedLatitudeRadSum);
+		setLongitude(homeCoordinates.getLongitude() + integratedLongitudeRadSum);
 
 		// Slip & skid
 		const auto accelerationG = accelerationGSum / _IMUs.size();
