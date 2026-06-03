@@ -54,13 +54,13 @@ namespace pizda {
 		
 		for (uint8_t i = 0; i < 100; ++i) {
 			ac.aircraftData.calibration.progress = static_cast<uint8_t>(static_cast<uint32_t>(i) * 0xFF / 100);
-			ac.transceiver.enqueueAuxiliary(AircraftAuxiliaryPacketType::calibration);
+			ac.transceiver.enqueueSystemPacket(AircraftSystemPacketType::calibration);
 
 			vTaskDelay(pdMS_TO_TICKS(percentDurationMs));
 		}
 
 		ac.aircraftData.calibration.progress = 0xFF;
-		ac.transceiver.enqueueAuxiliary(AircraftAuxiliaryPacketType::calibration);
+		ac.transceiver.enqueueSystemPacket(AircraftSystemPacketType::calibration);
 	}
 }
 

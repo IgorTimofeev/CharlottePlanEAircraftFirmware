@@ -53,7 +53,7 @@ namespace pizda {
 
 				// Reporting progress
 				ac.aircraftData.calibration.progress = static_cast<uint8_t>(static_cast<uint32_t>(i) * 0xFF / iterations);
-				ac.transceiver.enqueueAuxiliary(AircraftAuxiliaryPacketType::calibration);
+				ac.transceiver.enqueueSystemPacket(AircraftSystemPacketType::calibration);
 
 				vTaskDelay(pdMS_TO_TICKS(std::max(IMU::MPUSampleIntervalHz / 1000, portTICK_PERIOD_MS)));
 			}
@@ -78,7 +78,7 @@ namespace pizda {
 
 		// Reporting progress once more
 		ac.aircraftData.calibration.progress = 0xFF;
-		ac.transceiver.enqueueAuxiliary(AircraftAuxiliaryPacketType::calibration);
+		ac.transceiver.enqueueSystemPacket(AircraftSystemPacketType::calibration);
 
 		ESP_LOGI(_logTag, "accel & gyro calibration finished");
 	}
@@ -107,7 +107,7 @@ namespace pizda {
 
 				// Reporting progress
 				ac.aircraftData.calibration.progress = static_cast<uint8_t>(static_cast<uint32_t>(i) * 0xFF / iterations);
-				ac.transceiver.enqueueAuxiliary(AircraftAuxiliaryPacketType::calibration);
+				ac.transceiver.enqueueSystemPacket(AircraftSystemPacketType::calibration);
 
 				vTaskDelay(pdMS_TO_TICKS(std::max(IMU::magTickIntervalUs / 1000, portTICK_PERIOD_MS)));
 			}
@@ -124,7 +124,7 @@ namespace pizda {
 
 		// Reporting progress once more
 		ac.aircraftData.calibration.progress = 0xFF;
-		ac.transceiver.enqueueAuxiliary(AircraftAuxiliaryPacketType::calibration);
+		ac.transceiver.enqueueSystemPacket(AircraftSystemPacketType::calibration);
 
 		ESP_LOGI(_logTag, "mag calibration finished");
 	}

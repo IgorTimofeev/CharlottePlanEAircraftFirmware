@@ -11,8 +11,8 @@ namespace pizda {
 		AircraftPacketType,
 		AircraftPacket::typeLengthBits,
 
-		3,
-		AircraftAuxiliaryPacketType,
+		7,
+		AircraftSystemPacketType,
 
 		RemotePacketType,
 		RemotePacket::typeLengthBits,
@@ -26,7 +26,7 @@ namespace pizda {
 			[[noreturn]] void onStart() override;
 			void onTransmit(BitStream& stream, AircraftPacketType packetType) override;
 			bool onReceive(BitStream& stream, RemotePacketType packetType, uint8_t payloadLength) override;
-			bool receiveRemoteAuxiliaryPacket(BitStream& stream, uint8_t payloadLength);
+			bool receiveRemoteSystemPacket(BitStream& stream, uint8_t payloadLength);
 			void onConnectionStateChanged() override;
 
 		private:
@@ -39,20 +39,22 @@ namespace pizda {
 			int64_t _communicationSettingsACKTime = 0;
 
 			bool receiveRemoteControlsPacket(BitStream& stream, uint8_t payloadLength);
-			bool receiveRemoteAuxiliaryTrimPacket(BitStream& stream, uint8_t payloadLength);
-			bool receiveRemoteAuxiliaryLightsPacket(BitStream& stream, uint8_t payloadLength);
-			bool receiveRemoteAuxiliaryBaroPacket(BitStream& stream, uint8_t payloadLength);
-			bool receiveRemoteAuxiliaryAutopilotPacket(BitStream& stream, uint8_t payloadLength);
-			bool receiveRemoteAuxiliaryCameraPacket(BitStream& stream, uint8_t payloadLength);
-			bool receiveRemoteAuxiliaryMotorsPacket(BitStream& stream, uint8_t payloadLength);
-			bool receiveRemoteAuxiliaryADIRSPacket(BitStream& stream, uint8_t payloadLength);
-			bool receiveRemoteAuxiliaryXCVRPacket(BitStream& stream, uint8_t payloadLength);
-			bool receiveRemoteAuxiliaryCalibratePacket(BitStream& stream, uint8_t payloadLength);
+			bool receiveRemoteSystemTrimPacket(BitStream& stream, uint8_t payloadLength);
+			bool receiveRemoteSystemLightsPacket(BitStream& stream, uint8_t payloadLength);
+			bool receiveRemoteSystemBaroPacket(BitStream& stream, uint8_t payloadLength);
+			bool receiveRemoteSystemAutopilotPacket(BitStream& stream, uint8_t payloadLength);
+			bool receiveRemoteSystemCameraPacket(BitStream& stream, uint8_t payloadLength);
+			bool receiveRemoteSystemMotorsPacket(BitStream& stream, uint8_t payloadLength);
+			bool receiveRemoteSystemADIRSPacket(BitStream& stream, uint8_t payloadLength);
+			bool receiveRemoteSystemXCVRPacket(BitStream& stream, uint8_t payloadLength);
+			bool receiveRemoteSystemCalibratePacket(BitStream& stream, uint8_t payloadLength);
 
-			void transmitAircraftTelemetryPrimaryPacket(BitStream& stream);
-			void transmitAircraftTelemetrySecondaryPacket(BitStream& stream);
-			void transmitAircraftAuxiliaryPacket(BitStream& stream);
-			void transmitAircraftAuxiliaryCalibrationPacket(BitStream& stream);
-			void transmitAircraftAuxiliaryXCVRACKPacket(BitStream& stream);
+			void transmitAircraftSTierTelemetryPacket(BitStream& stream);
+			void transmitAircraftATierTelemetryPacket(BitStream& stream);
+			void transmitAircraftBTierTelemetryPacket(BitStream& stream);
+
+			void transmitAircraftSystemPacket(BitStream& stream);
+			void transmitAircraftSystemCalibrationPacket(BitStream& stream);
+			void transmitAircraftSystemCommunicationSettingsACKPacket(BitStream& stream);
 	};
 }

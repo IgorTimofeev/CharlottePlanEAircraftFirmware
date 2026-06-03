@@ -27,16 +27,12 @@ namespace pizda {
 	template<typename TLocalPacketType>
 	class PacketSequenceItem {
 		public:
-			PacketSequenceItem(const TLocalPacketType type, const uint8_t count, const bool useEnqueued = false) : _type(type), _count(count), _useEnqueued(useEnqueued) {
+			PacketSequenceItem(const TLocalPacketType type, const bool useEnqueued = false) : _type(type),  _useEnqueued(useEnqueued) {
 
 			}
 
 			TLocalPacketType getType() const {
 				return _type;
-			}
-
-			uint8_t getCount() const {
-				return _count;
 			}
 
 			bool useEnqueued() const {
@@ -45,7 +41,6 @@ namespace pizda {
 
 		private:
 			TLocalPacketType _type;
-			uint8_t _count;
 			bool _useEnqueued;
 	};
 
@@ -54,7 +49,7 @@ namespace pizda {
 		uint8_t localPacketTypeLengthBits,
 
 		uint8_t TLocalPacketSequenceLength,
-		typename TLocalAuxiliaryPacketType,
+		typename TLocalSystemPacketType,
 
 		typename TRemotePacketType,
 		uint8_t remotePacketTypeLengthBits,
@@ -214,7 +209,7 @@ namespace pizda {
 				return _connectionState == ConnectionState::connected;
 			}
 
-			void enqueueAuxiliary(TLocalAuxiliaryPacketType type) {
+			void enqueueSystemPacket(TLocalSystemPacketType type) {
 				xSemaphoreTake(_packetQueueMutex, portMAX_DELAY);
 
 				if (_packetQueue.full()) {
@@ -335,8 +330,8 @@ namespace pizda {
 				return crc;
 			}
 
-			TLocalAuxiliaryPacketType getEnqueuedAuxiliaryPacketType() const {
-				return _packetQueueAuxiliaryType;
+			TLocalSystemPacketType getEnqueuedSystemPacketType() const {
+				return _packetQueueSystemType;
 			}
 
 			static bool validatePayloadChecksumAndLength(BitStream& stream, size_t expectedDataLengthBits, uint8_t payloadLengthBytes) {
@@ -453,23 +448,15 @@ namespace pizda {
 			std::array<PacketSequenceItem<TLocalPacketType>, TLocalPacketSequenceLength> _packetSequence;
 
 			uint8_t _packetSequenceIndex = 0;
-			uint8_t _packetSequenceItemCounter = 0;
 
-			CircularQueue<TLocalAuxiliaryPacketType, 255> _packetQueue {};
+			CircularQueue<TLocalSystemPacketType, 255> _packetQueue {};
 			SemaphoreHandle_t _packetQueueMutex;
-			TLocalAuxiliaryPacketType _packetQueueAuxiliaryType {};
+			TLocalSystemPacketType _packetQueueSystemType {};
 
 			TLocalPacketType getTransmitPacketType() {
 				const auto& item = _packetSequence[_packetSequenceIndex];
 
-				const auto nextSequenceItem = [this, &item] {
-					_packetSequenceItemCounter++;
-
-					if (_packetSequenceItemCounter < item.getCount())
-						return;
-
-					_packetSequenceItemCounter = 0;
-
+				const auto nextSequenceItem = [this] {
 					_packetSequenceIndex++;
 
 					if (_packetSequenceIndex >= _packetSequence.size())
@@ -480,14 +467,14 @@ namespace pizda {
 				if (item.useEnqueued() && !_packetQueue.empty()) {
 					xSemaphoreTake(_packetQueueMutex, portMAX_DELAY);
 
-					_packetQueueAuxiliaryType = _packetQueue.front();
+					_packetQueueSystemType = _packetQueue.front();
 					_packetQueue.pop();
 
 					xSemaphoreGive(_packetQueueMutex);
 
 					nextSequenceItem();
 
-					return TLocalPacketType::auxiliary;
+					return TLocalPacketType::system;
 				}
 
 				// Normal
