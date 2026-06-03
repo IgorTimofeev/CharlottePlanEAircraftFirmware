@@ -159,9 +159,10 @@ namespace pizda {
 		float rollRadSum = 0;
 		float pitchRadSum = 0;
 		float yawRadSum = 0;
+		float integratedVelocityMsSum = 0;
 		Vector3F accelerationGSum {};
-		Vector3F integratedVelocityMsSum {};
-		Vector3F integratedPositionMSum {};
+		float integratedLatitudeRadSum = 0;
+		float integratedLongitudeRadSum = 0;
 
 		for (auto& IMU : _IMUs) {
 			IMU.unit.tick();
@@ -169,9 +170,12 @@ namespace pizda {
 			rollRadSum += IMU.unit.getRollRad();
 			pitchRadSum += IMU.unit.getPitchRad();
 			yawRadSum += IMU.unit.getYawRad();
-			accelerationGSum += IMU.unit.getAccelerationG();
+
 			integratedVelocityMsSum += IMU.unit.getIntegratedVelocityMs();
-			integratedPositionMSum += IMU.unit.getIntegratedPositionM();
+			accelerationGSum += IMU.unit.getAccelerationG();
+
+			integratedLatitudeRadSum += IMU.unit.getIntegratedLatitudeRad();
+			integratedLongitudeRadSum += IMU.unit.getIntegratedLongitudeRad();
 		}
 
 		// Roll / pitch / yaw
@@ -182,13 +186,17 @@ namespace pizda {
 
 		// Velocity
 		integratedVelocityMsSum /= _IMUs.size();
-		setIntegratedVelocityMPS(integratedVelocityMsSum);
+		setAirspeedMs(std::abs(integratedVelocityMsSum));
 
-		// Airspeed
-		setAirspeedMPS(std::max<float>(integratedVelocityMsSum.getY(), 0));
+		// ESP_LOGI("aefa","vel: %f", integratedVelocityMsSum);
 
 		// Coordinates
-		integratedPositionMSum /= _IMUs.size();
+		integratedLatitudeRadSum /= _IMUs.size();
+		integratedLongitudeRadSum /= _IMUs.size();
+
+		const auto& startCoordinates = getStartCoordinates();
+		setLatitude(startCoordinates.getLatitude() + integratedLatitudeRadSum);
+		setLongitude(startCoordinates.getLongitude() + integratedLongitudeRadSum);
 
 		// Slip & skid
 		const auto accelerationG = accelerationGSum / _IMUs.size();

@@ -25,10 +25,10 @@ namespace pizda {
 //			float _speed = 0;
 			
 			float getSlipAndSkidFactor() const;
+			const GeoCoordinates& getStartCoordinates() const;
 			const GeoCoordinates& getCoordinates() const;
-			const Vector3F& getIntegratedVelocityMPS() const;
 			void setReferencePressurePa(const uint32_t value);
-			float getAirspeedMPS() const;
+			float getAirspeedMs() const;
 
 		protected:
 			constexpr static auto _logTag = "ADIRS";
@@ -41,14 +41,13 @@ namespace pizda {
 			void setPitchRad(const float value);
 			void setYawRad(const float value);
 			void updateHeadingFromYaw();
-			void setIntegratedVelocityMPS(const Vector3F& value);
-			void setAirspeedMPS(const float value);
+			void setAirspeedMs(const float value);
 
 			static float computeAltitude(
 				const float pressurePa,
 				const float temperatureC,
 				const uint32_t referencePressurePa,
-				const float lapseRateKpm = -0.0065f
+				const float lapseRateKPM = -0.0065f
 			);
 
 			void updateSlipAndSkidFactor(const float lateralAccelerationG, const float maxG);
@@ -67,23 +66,32 @@ namespace pizda {
 
 			float _slipAndSkidFactor = 0;
 
-			Vector3F _integratedVelocityMPS {};
 			Vector3F _integratedPositionMPS {};
 
-			float _airspeedMPS = 0;
+			float _airspeedMs = 0;
 
 			float _pressurePa = 0;
 			float _temperatureC = 0;
 
 			uint32_t _referencePressurePa = 101325;
 
-			// 60.014002019765776, 29.717151511256816
-			// ОПЯТЬ ЖЕНЩИНЫ??? ФЕДЯ СУКА ЭТО ТЫ ЕБЛАН СДЕЛАЛ
-			GeoCoordinates _coordinates {
-				toRadians(60.014581566191914f),
-				toRadians(29.70258579817704f),
+			// // 60.014002019765776, 29.717151511256816
+			// // ОПЯТЬ ЖЕНЩИНЫ??? ФЕДЯ СУКА ЭТО ТЫ ЕБЛАН СДЕЛАЛ
+			// GeoCoordinates _coordinates {
+			// 	toRadians(60.014581566191914f),
+			// 	toRadians(29.70258579817704f),
+			// 	0
+			// };
+
+			// От греха подальше, а то, блядь, по Кронштадту ебнули сегодня, и нормальным авиамоделистам
+			// из-за такой хуйни остается лишь сосать бибу
+			GeoCoordinates _startCoordinates {
+				toRadians(59.812414f),
+				toRadians(30.555595f),
 				0
 			};
+
+			GeoCoordinates _coordinates = _startCoordinates;
 			
 			[[noreturn]] void onStart();
 	};

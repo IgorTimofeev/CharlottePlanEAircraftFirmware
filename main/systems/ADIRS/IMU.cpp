@@ -12,6 +12,7 @@
 #include <lowPassFilter.h>
 #include <units.h>
 
+#include "geoCoordinates.h"
 #include "systems/ADIRS/adaptiveComplimentaryFilter.h"
 #include "utilities/math.h"
 
@@ -49,11 +50,15 @@ namespace pizda {
 		return _accelerationG;
 	}
 
-	const Vector3F& IMU::getIntegratedPositionM() const {
-		return _integratedPositionM;
+	float IMU::getIntegratedLatitudeRad() const {
+		return _integratedRelativeLatitudeRad;
 	}
 
-	const Vector3F& IMU::getIntegratedVelocityMs() const {
+	float IMU::getIntegratedLongitudeRad() const {
+    	return _integratedRelativeLongitudeRad;
+    }
+
+	float IMU::getIntegratedVelocityMs() const {
 		return _integratedVelocityMs;
 	}
 
@@ -98,21 +103,21 @@ namespace pizda {
 
 	Vector3F IMU::getRawAccelData() const {
 		float x, y, z;
-		_MPU.getAccelData(x, y, z);
+		_MPU.readAccelData(x, y, z);
 
 		return { x, y, z };
 	}
 
 	Vector3F IMU::getRawGyroData() const {
 		float x, y, z;
-		_MPU.getGyroData(x, y, z);
+		_MPU.readGyroData(x, y, z);
 
 		return { x, y, z };
 	}
 
 	Vector3F IMU::getRawMagData() const {
 		float x, y, z;
-		_MPU.getMagData(x, y, z);
+		_MPU.readMagData(x, y, z);
 
 		return { x, y, z };
 	}
@@ -156,7 +161,7 @@ namespace pizda {
 		_magTickTimeUs = esp_timer_get_time();
 
 		float x, y, z;
-		_MPU.getMagData(x, y, z);
+		_MPU.readMagData(x, y, z);
 
 		//					ESP_LOGI(_logTag, "mag raw: %f x %f x %f", magData.getX(), magData.getY(), magData.getZ());
 
@@ -182,7 +187,7 @@ namespace pizda {
 
 		const auto sampleCount = _MPU.getFIFOCount() / FIFOSampleLength;
 
-		//				ESP_LOGI(_logTag, "FIFO sample count %d", sampleCount);
+		// ESP_LOGI(_logTag, "FIFO sample count %d", sampleCount);
 
 		if (sampleCount < 2) {
 			ESP_LOGW(_logTag, "FIFO sample count %d is not enough, skipping for more data", sampleCount);
@@ -194,26 +199,30 @@ namespace pizda {
 
 		_MPU.setFIFODataSource(MPU9250_FIFO_DATA_SOURCE_NONE);
 
-		//				ESP_LOGI(_logTag, "FIFO sample count: %d", sampleCount);
+		// ESP_LOGI(_logTag, "FIFO sample count: %d", sampleCount);
 
 		uint8_t sample[FIFOSampleLength] {};
 		Vector3F accelerationGSum {};
 		float x, y, z;
 
 		for (uint32_t i = 0; i < sampleCount; i++) {
-			// FIFO
-			_MPU.getFIFOData(sample, FIFOSampleLength);
+			// -------------------------------- FIFO data --------------------------------
 
-			// Accel
+			// Reading sample
+			_MPU.readFIFOData(sample, FIFOSampleLength);
+
+			// Extracting accel vector
 			_MPU.getAccelData(sample, x, y, z);
 			const auto accelData = Vector3F(x, y, z) - _accelBias;
-			accelerationGSum += accelData;
 
-			// Gyro
+			// Extracting gyr vector
 			_MPU.getGyroData(sample + FIFOSampleDataTypeLength, x, y, z);
 			const auto gyroData = Vector3F(x, y, z) - _gyroBias;
 
-			// Applying adaptive complimentary filter
+			// -------------------------------- RPY angles --------------------------------
+
+			// Performing sensor fusion & obtaining aircraft attitude
+			// (mag vector is being processed outside of FIFO loop)
 			AdaptiveComplimentaryFiler::apply(
 				accelData,
 				gyroData,
@@ -221,28 +230,47 @@ namespace pizda {
 
 				FIFOSampleIntervalS,
 
-				0.8,
+				0.8f,
 				0.95,
 
-				0.95,
+				0.95f,
 
 				_rollRad,
 				_pitchRad,
 				_yawRad
 			);
 
-			// Position
-			auto accelTilt = AdaptiveComplimentaryFiler::applyTiltCompensation(accelData, _rollRad, _pitchRad);
-			// Subtracting 1G
-			accelTilt.setZ(accelTilt.getZ() - 1);
 
-			auto accelerationMs2 = accelTilt * Units::earthGMs2;
-			_integratedVelocityMs += accelerationMs2 * FIFOSampleIntervalS;
+			// Applying tilt compensation to accel vector using obtained RP angles
+			// (will be less accurate than raw accel data, because of FUCKING TOKYO DRIFT)
+			auto tiltCompensatedAccelData = AdaptiveComplimentaryFiler::applyTiltCompensation(accelData, _rollRad, _pitchRad);
+			// Subtracting 1G, because we need "pure" aircraft data without Mother Earth affection
+			tiltCompensatedAccelData.setZ(tiltCompensatedAccelData.getZ() - 1);
 
-			auto accelPositionOffsetM = _integratedVelocityMs * FIFOSampleIntervalS;
-			_integratedPositionM += accelPositionOffsetM;
+			// -------------------------------- Acceleration --------------------------------
 
-			// ESP_LOGI(_logTag, "Acc vel: %f x %f x %f", _integratedVelocityMs.getX(), _integratedVelocityMs.getY(), _integratedVelocityMs.getZ());
+			accelerationGSum += accelData;
+
+			// -------------------------------- Velocity --------------------------------
+
+			// Computing integrated velocity
+			// accelerationMPS = accelerationG * ~9.8
+			// velocityMPS = accelerationMPS * deltaTime
+			_integratedVelocityMs += (-tiltCompensatedAccelData.getY()) * Units::earthGMs2 * FIFOSampleIntervalS;
+
+			// -------------------------------- Position --------------------------------
+
+			// Computing integrated velocity again, but now using tilt compensation
+			_integratedTiltCompensatedVelocityMs += tiltCompensatedAccelData * Units::earthGMs2 * FIFOSampleIntervalS;
+
+			// Computing integrated position relative to start point
+			auto integratedMovementM = _integratedTiltCompensatedVelocityMs * FIFOSampleIntervalS;
+			// Aligning movement vector to Earth axis (Y should point to north)
+			integratedMovementM = integratedMovementM.rotateAroundYAxis(_yawRad);
+			// Accumulating relative position
+			_integratedAlignedPositionM += integratedMovementM;
+
+			// ESP_LOGI(_logTag, "Acc vel: %f x %f x %f", _integratedTiltCompensatedVelocityMs.getX(), _integratedTiltCompensatedVelocityMs.getY(), _integratedTiltCompensatedVelocityMs.getZ());
 			// ESP_LOGI(_logTag, "Acc pos: %f x %f x %f", _integratedPositionM.getX(), _integratedPositionM.getY(), _integratedPositionM.getZ());
 		}
 
@@ -250,8 +278,18 @@ namespace pizda {
 		_MPU.setFIFODataSource(FIFODataSource);
 		_MPU.readAndClearInterruptStatus();
 
+    	// Computing acceleration
 		accelerationGSum /= sampleCount;
 		_accelerationG = accelerationGSum;
+
+    	// Computing geographic coordinates using aligned relative position
+    	GeoCoordinates::distanceToLatitudeAndLongitude(
+    		_integratedAlignedPositionM.getY(),
+    		_integratedAlignedPositionM.getX(),
+
+    		_integratedRelativeLatitudeRad,
+    		_integratedRelativeLongitudeRad
+		);
 
 		_FIFOTickTimeUs = esp_timer_get_time() + FIFOTickIntervalUs;
 	}

@@ -22,7 +22,7 @@ idf_component_register(
         ESP-IDF-SX1262
         ESP-IDF-MPU9250
         ESP-IDF-BMP280
-        ESP-IDF-Battery
+        ESP-IDF-ADCVoltmeter
         ESP-IDF-PCA9685
 )
 

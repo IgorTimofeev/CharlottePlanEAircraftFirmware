@@ -78,8 +78,9 @@ namespace pizda {
 			float getYawRad() const;
 
 			const Vector3F& getAccelerationG() const;
-			const Vector3F& getIntegratedPositionM() const;
-			const Vector3F& getIntegratedVelocityMs() const;
+			float getIntegratedLatitudeRad() const;
+			float getIntegratedLongitudeRad() const;
+			float getIntegratedVelocityMs() const;
 
 			void setCalibrationMode();
 			void setOperationalMode();
@@ -132,8 +133,12 @@ namespace pizda {
 			float _rollRad = 0;
 			float _pitchRad = 0;
 			float _yawRad = 0;
-			
-			Vector3F _integratedVelocityMs {};
-			Vector3F _integratedPositionM {};
+
+			float _integratedVelocityMs {};
+			Vector3F _integratedTiltCompensatedVelocityMs {};
+			Vector3F _integratedAlignedPositionM {};
+
+			float _integratedRelativeLatitudeRad = 0;
+			float _integratedRelativeLongitudeRad = 0;
 	};
 }

@@ -60,24 +60,24 @@ namespace pizda {
 		return _slipAndSkidFactor;
 	}
 
-	const GeoCoordinates& ADIRS::getCoordinates() const {
-		return _coordinates;
+	const GeoCoordinates& ADIRS::getStartCoordinates() const {
+		return _startCoordinates;
 	}
 
-	const Vector3F& ADIRS::getIntegratedVelocityMPS() const {
-		return _integratedVelocityMPS;
+	const GeoCoordinates& ADIRS::getCoordinates() const {
+		return _coordinates;
 	}
 
 	void ADIRS::setReferencePressurePa(const uint32_t value) {
 		_referencePressurePa = value;
 	}
 
-	float ADIRS::getAirspeedMPS() const {
-		return _airspeedMPS;
+	float ADIRS::getAirspeedMs() const {
+		return _airspeedMs;
 	}
 
-	void ADIRS::setAirspeedMPS(const float value) {
-		_airspeedMPS = value;
+	void ADIRS::setAirspeedMs(const float value) {
+		_airspeedMs = value;
 	}
 
 	void ADIRS::setRollRad(const float value) {
@@ -96,11 +96,7 @@ namespace pizda {
 		_headingDeg = toDegrees(-_yawRad);
 	}
 
-	void ADIRS::setIntegratedVelocityMPS(const Vector3F& value) {
-		_integratedVelocityMPS = value;
-	}
-
-	float ADIRS::computeAltitude(const float pressurePa, const float temperatureC, const uint32_t referencePressurePa, const float lapseRateKpm) {
+	float ADIRS::computeAltitude(const float pressurePa, const float temperatureC, const uint32_t referencePressurePa, const float lapseRateKPM) {
 		// Physical constants
 		constexpr static float g = 9.80665f;       // Gravitational acceleration (m/s²)
 		constexpr static float R = 8.314462618f;   // Universal gas constant (J/(mol·K))
@@ -118,15 +114,15 @@ namespace pizda {
 		// h = (T0 / L) * (1 - (P / P0)^(R * L / (g * M)))
 
 		// If temperature lapse rate is close to zero, use simplified formula
-		if (std::abs(lapseRateKpm) < 1e-6f) {
+		if (std::abs(lapseRateKPM) < 1e-6f) {
 			// Isothermal atmosphere (lapse rate ≈ 0)
 			return (R * temperatureK) / (g * M) * std::log(static_cast<float>(referencePressurePa) / pressurePa);
 		}
 
 		// Full formula with temperature gradient
-		const float exponent = (R * lapseRateKpm) / (g * M);
+		const float exponent = (R * lapseRateKPM) / (g * M);
 		const float power = std::pow(pressurePa / static_cast<float>(referencePressurePa), exponent);
-		const float altitude = (temperatureK / lapseRateKpm) * (1.0f - power);
+		const float altitude = (temperatureK / lapseRateKPM) * (1.0f - power);
 
 		return altitude;
 	}

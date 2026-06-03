@@ -79,7 +79,9 @@ namespace pizda {
 			}
 
 			static Vector3F applyTiltCompensation(const Vector3F& vec, const float rollRad, const float pitchRad) {
-				return vec.rotateAroundXAxis(pitchRad).rotateAroundYAxis(rollRad);
+				return vec
+					.rotateAroundXAxis(pitchRad)
+					.rotateAroundYAxis(rollRad);
 			}
 
 		private:

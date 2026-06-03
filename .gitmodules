@@ -10,9 +10,6 @@
 [submodule "components/ESP-IDF-Units"]
 	path = components/ESP-IDF-Units
 	url = https://github.com/IgorTimofeev/ESP-IDF-Units.git
-[submodule "components/ESP-IDF-Battery"]
-	path = components/ESP-IDF-Battery
-	url = https://github.com/IgorTimofeev/ESP-IDF-Battery.git
 [submodule "components/ESP-IDF-MPU9250"]
 	path = components/ESP-IDF-MPU9250
 	url = https://github.com/IgorTimofeev/ESP-IDF-MPU9250.git

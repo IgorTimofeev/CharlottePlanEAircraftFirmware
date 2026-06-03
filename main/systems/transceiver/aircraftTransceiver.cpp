@@ -670,7 +670,7 @@ namespace pizda {
 		
 		// Speed
 		const auto speedFactor =
-			std::min<float>(ac.adirs.getAirspeedMPS(), AircraftTelemetryPrimaryPacket::speedMaxMPS)
+			std::min<float>(ac.adirs.getAirspeedMs(), AircraftTelemetryPrimaryPacket::speedMaxMPS)
 		    / static_cast<float>(AircraftTelemetryPrimaryPacket::speedMaxMPS);
 		
 		const auto speedMapped = static_cast<float>((1 << AircraftTelemetryPrimaryPacket::speedLengthBits) - 1) * speedFactor;
@@ -730,7 +730,7 @@ namespace pizda {
 		// -------------------------------- Battery --------------------------------
 
 		// Decavolts
-		stream.writeUint16(ac.battery.getVoltage() / 100, AircraftTelemetrySecondaryPacket::batteryLengthBits);
+		stream.writeUint16(ac.battery.getVoltageMV() / 100, AircraftTelemetrySecondaryPacket::batteryLengthBits);
 		
 		// -------------------------------- Lights --------------------------------
 		

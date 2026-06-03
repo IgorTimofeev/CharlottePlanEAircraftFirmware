@@ -5,7 +5,7 @@
 #include <esp_adc/adc_oneshot.h>
 #include <driver/i2c_master.h>
 
-#include <battery.h>
+#include <ADCVoltmeter.h>
 
 #include "config.h"
 #include "settings/settings.h"
@@ -35,7 +35,7 @@ namespace pizda {
 			Lights lights {};
 			Motors motors {};
 
-			Battery battery {
+			ADCVoltmeter battery {
 				config::battery::unit,
 				getAssignedADCOneshotUnit(config::battery::unit),
 				config::battery::channel,

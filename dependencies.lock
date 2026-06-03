@@ -16,6 +16,6 @@ dependencies:
 direct_dependencies:
 - espressif/led_strip
 - idf
-manifest_hash: c194225b9809d8fc6eadf88192056d4566001b65a1be940f50e8121253a43757
+manifest_hash: faefe3a6ac811849de958ff607c6c4a49e4a932fc98e0132f67b7bf47d19d750
 target: esp32s3
 version: 3.0.0

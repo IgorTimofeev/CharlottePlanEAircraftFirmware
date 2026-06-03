@@ -126,7 +126,7 @@ namespace pizda {
 		
 		// -------------------------------- Values --------------------------------
 		
-		const auto speedMPS = ac.adirs.getAirspeedMPS();
+		const auto speedMPS = ac.adirs.getAirspeedMs();
 		const auto altitudeM = ac.adirs.getCoordinates().getAltitude();
 		const auto rollRad = ac.adirs.getRollRad();
 		const auto pitchRad = ac.adirs.getPitchRad();
