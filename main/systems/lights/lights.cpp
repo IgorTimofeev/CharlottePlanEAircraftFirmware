@@ -22,11 +22,11 @@ namespace pizda {
 	void Lights::setCabinEnabled(const bool value) const {
 		auto& ac = Aircraft::getInstance();
 		
-		if (value == ac.settings.lights.cabin)
+		if (value == ac.settings.lights.getCabin())
 			return;
 		
-		ac.settings.lights.cabin = value;
-		ac.settings.lights.scheduleWrite();
+		ac.settings.lights.setCabin(value);
+		ac.settings.lights.writeLater();
 		
 		wake();
 	}
@@ -34,11 +34,11 @@ namespace pizda {
 	void Lights::setNavigationEnabled(const bool value) const {
 		auto& ac = Aircraft::getInstance();
 		
-		if (value == ac.settings.lights.nav)
+		if (value == ac.settings.lights.getNav())
 			return;
 		
-		ac.settings.lights.nav = value;
-		ac.settings.lights.scheduleWrite();
+		ac.settings.lights.setNav(value);
+		ac.settings.lights.writeLater();
 		
 		wake();
 	}
@@ -46,11 +46,11 @@ namespace pizda {
 	void Lights::setStrobeEnabled(const bool value) const {
 		auto& ac = Aircraft::getInstance();
 		
-		if (value == ac.settings.lights.strobe)
+		if (value == ac.settings.lights.getStrobe())
 			return;
 		
-		ac.settings.lights.strobe = value;
-		ac.settings.lights.scheduleWrite();
+		ac.settings.lights.setStrobe(value);
+		ac.settings.lights.writeLater();
 		
 		wake();
 	}
@@ -58,11 +58,11 @@ namespace pizda {
 	void Lights::setLandingEnabled(const bool value) const {
 		auto& ac = Aircraft::getInstance();
 		
-		if (value == ac.settings.lights.landing)
+		if (value == ac.settings.lights.getLanding())
 			return;
 		
-		ac.settings.lights.landing = value;
-		ac.settings.lights.scheduleWrite();
+		ac.settings.lights.setLanding(value);
+		ac.settings.lights.writeLater();
 		
 		wake();
 	}
@@ -90,7 +90,7 @@ namespace pizda {
 		const auto& ac = Aircraft::getInstance();
 		
 		// Navigation
-		if (ac.settings.lights.nav) {
+		if (ac.settings.lights.getNav()) {
 			light.fill(r, g, b);
 		}
 		else {
@@ -98,7 +98,7 @@ namespace pizda {
 		}
 
 		// Landing
-		if (ac.settings.lights.landing)
+		if (ac.settings.lights.getLanding())
 			light.fill(0, light.getLength() / 2, 0xFF, 0xFF, 0xFF);
 
 		light.flush();
@@ -107,7 +107,7 @@ namespace pizda {
 	void Lights::updateWingStrobe(const Light& light, const uint8_t r, const uint8_t g, const uint8_t b) {
 		const auto& ac = Aircraft::getInstance();
 		
-		if (ac.settings.lights.strobe) {
+		if (ac.settings.lights.getStrobe()) {
 			light.fill(0xFF);
 			light.flush();
 		}
@@ -119,7 +119,16 @@ namespace pizda {
 	void Lights::updateTailStrobe(const bool active) const {
 		const auto& ac = Aircraft::getInstance();
 
-		_tail.fill(ac.settings.lights.strobe && active ? 0xFF : tailDimmedValue);
+		_tail.fill(
+			ac.settings.lights.getStrobe() && active
+			? 0xFF
+			: (
+				ac.settings.lights.getNav()
+				? tailDimmedValue
+				: 0
+			)
+		);
+
 		_tail.flush();
 	}
 
@@ -187,7 +196,7 @@ namespace pizda {
 			}
 			else {
 				// Cabin
-				setCabin(ac.settings.lights.cabin);
+				setCabin(ac.settings.lights.getCabin());
 				
 				// Left wing (strobe 1 or red)
 				updateWingStrobe(_leftWing, 0xFF, 0x00, 0x00);

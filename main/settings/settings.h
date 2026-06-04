@@ -8,6 +8,12 @@
 #include "settings/autopilotSettings.h"
 
 namespace pizda {
+	class SettingsAutopilot {
+		public:
+			AutopilotConfigurationSettings configuration {};
+			AutopilotSelectionSettings selection {};
+	};
+
 	class Settings {
 		public:
 			MotorsSettings motors {};
@@ -15,7 +21,7 @@ namespace pizda {
 			LightsSettings lights {};
 			TrimSettings trim {};
 			TransceiverSettings transceiver {};
-			AutopilotSettings autopilot {};
+			SettingsAutopilot autopilot {};
 
 			void setup() {
 				motors.read();
@@ -23,7 +29,9 @@ namespace pizda {
 				lights.read();
 				adirs.read();
 				transceiver.read();
-				autopilot.read();
+
+				autopilot.configuration.read();
+				autopilot.selection.read();
 			}
 	};
 }

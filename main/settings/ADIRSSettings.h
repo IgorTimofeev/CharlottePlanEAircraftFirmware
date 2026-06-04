@@ -2,6 +2,7 @@
 
 #include <array>
 #include <span>
+#include <atomic>
 
 #include <NVSSettings.h>
 #include <NVSStream.h>
@@ -21,8 +22,21 @@ namespace pizda {
 	
 	class ADIRSSettings : public NVSSettings {
 		public:
-			uint32_t referencePressurePa = 0;
-			int16_t magneticDeclinationDeg = 0;
+			uint32_t getReferencePressurePa() const {
+				return _referencePressurePa.load(std::memory_order_acquire);
+			}
+
+			void setReferencePressurePa(const uint32_t value) {
+				_referencePressurePa.store(value, std::memory_order_release);
+			}
+
+			int16_t getMagneticDeclinationDeg() const {
+				return _magneticDeclinationDeg.load(std::memory_order_acquire);
+			}
+
+			void setMagneticDeclinationDeg(const int16_t value) {
+				_magneticDeclinationDeg.store(value, std::memory_order_release);
+			}
 
 			std::array<ADIRSSettingsUnit, config::ADIRS::unitCount> units {};
 
@@ -32,34 +46,35 @@ namespace pizda {
 			}
 
 			void onRead(const NVSStream& stream) override {
-				referencePressurePa = stream.readUint32(_referencePressurePa, 101325);
-				magneticDeclinationDeg = stream.readInt16(_magneticDeclinationDeg, 0);
+				setReferencePressurePa(stream.readUint32(_referencePressurePaKey, 101325));
+				setMagneticDeclinationDeg(stream.readInt16(_magneticDeclinationDegKey, 0));
 
 				// Units
 				{
 					const auto readUnitCount = stream.readObjectSize<ADIRSSettingsUnit>(_units);
 
-					if (readUnitCount <= 0)
-						return;
-
-					if (readUnitCount != config::ADIRS::unitCount) {
-						ESP_LOGI("ADIRSSettings", "read units length (%d) != config length (%d)", readUnitCount, config::ADIRS::unitCount);
-						return;
+					if (readUnitCount == config::ADIRS::unitCount) {
+						stream.readObject<ADIRSSettingsUnit>(_units, std::span { units.data(), readUnitCount });
 					}
-
-					stream.readObject<ADIRSSettingsUnit>(_units, std::span { units.data(), readUnitCount });
+					else {
+						ESP_LOGI("ADIRSSettings", "read units length (%d) != config length (%d)", readUnitCount, config::ADIRS::unitCount);
+					}
 				}
 			}
 
 			void onWrite(const NVSStream& stream) override {
-				stream.writeUint32(_referencePressurePa, referencePressurePa);
-				stream.writeInt16(_magneticDeclinationDeg, magneticDeclinationDeg);
+				stream.writeUint32(_referencePressurePaKey, getReferencePressurePa());
+				stream.writeInt16(_magneticDeclinationDegKey, getMagneticDeclinationDeg());
+
 				stream.writeObject<ADIRSSettingsUnit>(_units, units);
 			}
 			
 		private:
 			constexpr static auto _units = "un";
-			constexpr static auto _referencePressurePa = "rp";
-			constexpr static auto _magneticDeclinationDeg = "md";
+			constexpr static auto _referencePressurePaKey = "rp";
+			constexpr static auto _magneticDeclinationDegKey = "md";
+
+			std::atomic<uint32_t> _referencePressurePa { 0 };
+			std::atomic<int16_t> _magneticDeclinationDeg { 0 };
 	};
 }

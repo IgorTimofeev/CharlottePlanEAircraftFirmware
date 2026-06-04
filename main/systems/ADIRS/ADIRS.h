@@ -2,8 +2,6 @@
 
 #include <atomic>
 
-#include <esp_log.h>
-
 #include <geoCoordinates.h>
 
 #include "utilities/math.h"
@@ -16,7 +14,6 @@ namespace pizda {
 			virtual ~ADIRS() = default;
 
 			virtual void setup();
-			void setupAsync();
 
 			float getRollRad() const;
 			float getPitchRad() const;
@@ -24,7 +21,6 @@ namespace pizda {
 			float getHeadingDeg() const;
 			float getSlipAndSkidFactor() const;
 
-			void setReferencePressurePa(const uint32_t value);
 			float getAirspeedMPS() const;
 
 			float getHomeLatitude() const;
@@ -62,10 +58,6 @@ namespace pizda {
 
 			virtual void setHomeCoordinates(const float latitude, const float longitude, const float altitude);
 
-			void setHomeLatitude(const float value);
-			void setHomeLongitude(const float value);
-			void setHomeAltitude(const float value);
-
 			void setLatitude(const float value);
 			void setLongitude(const float value);
 			void setAltitude(const float value);
@@ -83,8 +75,6 @@ namespace pizda {
 
 			std::atomic<float> _pressurePa { 0.0f };
 			std::atomic<float> _temperatureC { 0.0f };
-
-			std::atomic<uint32_t> _referencePressurePa { 101325 };
 
 			// // 60.014002019765776, 29.717151511256816
 			// // ОПЯТЬ ЖЕНЩИНЫ??? ФЕДЯ СУКА ЭТО ТЫ ЕБЛАН СДЕЛАЛ

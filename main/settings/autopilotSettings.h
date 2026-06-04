@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <atomic>
 
 #include <NVSSettings.h>
 
@@ -34,7 +35,7 @@ namespace pizda {
 			}
 	};
 
-	class AutopilotSettings : public NVSSettings {
+	class AutopilotConfigurationSettings : public NVSSettings {
 		public:
 			// Lateral
 			AutopilotLateralMode lateralMode = AutopilotLateralMode::hdg;
@@ -163,5 +164,61 @@ namespace pizda {
 			constexpr static auto _speedToThrottleP = "pstp";
 			constexpr static auto _speedToThrottleI = "psti";
 			constexpr static auto _speedToThrottleD = "pstd";
+	};
+
+	class AutopilotSelectionSettings : public NVSSettings {
+		public:
+			float getSelectedSpeedMPS() const {
+				return _selectedSpeedMPS.load(std::memory_order_acquire);
+			}
+
+			void setSelectedSpeedMPS(const float value) {
+				_selectedSpeedMPS.store(value, std::memory_order_release);
+			}
+
+			uint16_t getSelectedHeadingDeg() const {
+				return _selectedHeadingDeg.load(std::memory_order_acquire);
+			}
+
+			void setSelectedHeadingDeg(const uint16_t value) {
+				_selectedHeadingDeg.store(value, std::memory_order_release);
+			}
+
+			float getSelectedAltitudeM() const {
+				return _selectedAltitudeM.load(std::memory_order_acquire);
+			}
+
+			void setSelectedAltitudeM(const float value) {
+				_selectedAltitudeM.store(value, std::memory_order_release);
+			}
+
+		protected:
+			const char* getNamespace() override {
+				return _namespace;
+			}
+
+			void onRead(const NVSStream& stream) override {
+				setSelectedSpeedMPS(stream.readFloat(_selectedSpeedMPSKey, 0.0f));
+				setSelectedHeadingDeg(stream.readUint16(_selectedHeadingDegKey, 0));
+				setSelectedAltitudeM(stream.readFloat(_selectedAltitudeMKey, 0.0f));
+			}
+
+			void onWrite(const NVSStream& stream) override {
+				stream.writeFloat(_selectedSpeedMPSKey, getSelectedSpeedMPS());
+				stream.writeUint16(_selectedHeadingDegKey, getSelectedHeadingDeg());
+				stream.writeFloat(_selectedAltitudeMKey, getSelectedAltitudeM());
+			}
+
+		private:
+			constexpr static auto _namespace = "apm";
+
+			constexpr static auto _selectedSpeedMPSKey = "sp";
+			constexpr static auto _selectedHeadingDegKey = "hd";
+			constexpr static auto _selectedAltitudeMKey = "as";
+
+			std::atomic<float> _selectedSpeedMPS { 0.0f };
+			std::atomic<uint16_t> _selectedHeadingDeg { 0 };
+			std::atomic<float> _selectedAltitudeM { 0.0f };
+
 	};
 }

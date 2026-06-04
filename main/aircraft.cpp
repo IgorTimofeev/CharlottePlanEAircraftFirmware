@@ -61,7 +61,17 @@ namespace pizda {
 		lights.setup();
 		battery.setup();
 
-		adirs.setupAsync();
+		xTaskCreate(
+			[](void* arg) {
+				static_cast<Aircraft*>(arg)->adirs.setup();
+				vTaskDelete(nullptr);
+			},
+			"AsyncSetup",
+			4 * 1024,
+			this,
+			10,
+			nullptr
+		);
 
 		#ifdef SIM
 			simLink.setup();

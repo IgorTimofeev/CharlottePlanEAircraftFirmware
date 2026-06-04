@@ -75,7 +75,7 @@ namespace pizda {
 			auto& settingsUnit = ac.settings.adirs.units[ADIRUIndex];
 			settingsUnit.accelBias = aSum;
 			settingsUnit.gyroBias = gSum;
-			ac.settings.adirs.scheduleWrite();
+			ac.settings.adirs.writeLater();
 
 			IMU.setAccelBias(settingsUnit.accelBias);
 			IMU.setGyroBias(settingsUnit.gyroBias);
@@ -122,7 +122,7 @@ namespace pizda {
 
 			auto& settingsUnit = ac.settings.adirs.units[ADIRUIndex];
 			settingsUnit.magBias = min + (max - min) / 2;
-			ac.settings.adirs.scheduleWrite();
+			ac.settings.adirs.writeLater();
 
 			IMU.setMagBias(settingsUnit.magBias);
 
@@ -162,8 +162,6 @@ namespace pizda {
 	}
 
 	void I2CADIRS::updateIMUs() {
-		const auto& ac = Aircraft::getInstance();
-
 		float rollRadSum = 0;
 		float pitchRadSum = 0;
 		float yawRadSum = 0;
@@ -189,7 +187,7 @@ namespace pizda {
 		// Roll / pitch / yaw
 		setRollRad(rollRadSum / _IMUs.size());
 		setPitchRad(pitchRadSum / _IMUs.size());
-		setYawRad(yawRadSum / _IMUs.size() + toRadians(ac.settings.adirs.magneticDeclinationDeg));
+		setYawRad(yawRadSum / _IMUs.size());
 		updateHeadingFromYaw();
 
 		// Velocity

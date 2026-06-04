@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <atomic>
 
 #include <PIDController.h>
 
@@ -13,32 +14,23 @@ namespace pizda {
 		public:
 			void setup();
 			
-			float getSelectedSpeedMPS() const;
-			void setSelectedSpeedMps(float value);
-			
-			uint16_t getSelectedHeadingDeg() const;
-			void setSelectedHeadingDeg(uint16_t value);
-			
-			float getSelectedAltitudeM() const;
-			void setSelectedAltitudeM(float value);
-
-			float getHoldAltitudeM() const;
-			void setHoldAltitudeM(float value);
-
-			AutopilotLateralMode getLateralMode() const;
-			void setLateralMode(AutopilotLateralMode value);
-			
-			AutopilotVerticalMode getVerticalMode() const;
-			void setVerticalMode(AutopilotVerticalMode value);
-			
-			bool isAutothrottleEnabled() const;
-			void setAutothrottleEnabled(bool value);
-			
-			bool isAutopilotEngaged() const;
-			void setAutopilotEngaged(bool value);
-
 			float getTargetRollRad() const;
 			float getTargetPitchRad() const;
+
+			AutopilotLateralMode getLateralMode() const;
+			void setLateralMode(const AutopilotLateralMode value);
+
+			AutopilotVerticalMode getVerticalMode() const;
+			void setVerticalMode(const AutopilotVerticalMode value);
+
+			float getHoldAltitudeM() const;
+			void setHoldAltitudeM(const float value);
+
+			bool isAutothrottleEnabled() const;
+			void setAutothrottleEnabled(const bool value);
+
+			bool isAutopilotEngaged() const;
+			void setAutopilotEngaged(const bool value);
 
 			void setEmergency(bool state);
 
@@ -48,23 +40,6 @@ namespace pizda {
 			constexpr static uint32_t _tickFrequencyHz = 30;
 
 			int64_t _computationTimeUs = 0;
-
-			float _throttleFactor = 0;
-			float _rollTargetRad = 0;
-			float _pitchTargetRad = 0;
-			
-			float _aileronsFactor = 0.5;
-			float _elevatorFactor = 0.5;
-			float _rudderFactor = 0.5;
-
-			float _speedSelectedMPS = 0;
-			uint16_t _headingSelectedDeg = 0;
-			float _altitudeSelectedM = 0;
-			float _altitudeHoldM = 0;
-
-			AutopilotLateralMode _lateralMode = AutopilotLateralMode::dir;
-			AutopilotVerticalMode _verticalMode = AutopilotVerticalMode::dir;
-
 			PIDController _yawDeltaToRollPID {};
 			PIDController _altitudeToPitchPID {};
 			PIDController _speedToPitchPID {};
@@ -72,9 +47,23 @@ namespace pizda {
 			PIDController _pitchToElevatorPID {};
 			PIDController _speedToThrottlePID {};
 
-			bool _autothrottleEnabled = false;
-			bool _autopilotEngaged = false;
+			std::atomic<AutopilotLateralMode> _lateralMode { AutopilotLateralMode::dir };
+			std::atomic<AutopilotVerticalMode> _verticalMode { AutopilotVerticalMode::dir };
+
+			std::atomic<float> _holdAltitudeM { 0.0f };
+
+			std::atomic<bool> _autothrottleEnabled { false };
+			std::atomic<bool> _autopilotEngaged { false };
+
 			bool _emergency = false;
+
+			float _throttleFactor = 0.0f;
+			float _rollTargetRad = 0.0f;
+			float _pitchTargetRad = 0.0f;
+
+			float _aileronsFactor = 0.5f;
+			float _elevatorFactor = 0.5f;
+			float _rudderFactor = 0.5f;
 
 			static float predictValue(float valueDelta, float deltaTimeS, float dueTimeS);
 			

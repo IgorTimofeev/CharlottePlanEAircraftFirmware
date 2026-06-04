@@ -12,6 +12,7 @@
 #include <lowPassFilter.h>
 #include <units.h>
 
+#include "aircraft.h"
 #include "geoCoordinates.h"
 #include "systems/ADIRS/adaptiveComplimentaryFilter.h"
 #include "utilities/math.h"
@@ -249,6 +250,7 @@ namespace pizda {
 				_yawRad
 			);
 
+			// ESP_LOGI(_logTag, "RPY deg: %f x %f x %f", toDegrees(_rollRad),  toDegrees(_pitchRad),  toDegrees(_yawRad));
 
 			// Applying tilt compensation to accel vector using obtained RP angles
 			// (will be less accurate than raw accel data, because of FUCKING TOKYO DRIFT)

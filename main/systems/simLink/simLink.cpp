@@ -76,10 +76,10 @@ namespace pizda {
 				packet->flaps = flaps ? flaps->getRawPowerF() : 0;
 
 				packet->lights =
-					(ac.settings.lights.nav << 0)
-					| (ac.settings.lights.strobe << 1)
-					| (ac.settings.lights.landing << 2)
-					| (ac.settings.lights.cabin << 3);
+					(ac.settings.lights.getNav())
+					| (ac.settings.lights.getStrobe() << 1)
+					| (ac.settings.lights.getLanding() << 2)
+					| (ac.settings.lights.getCabin() << 3);
 
 				uart_write_bytes(UART_NUM_0, _buffer, sizeof(SimLinkAircraftPacket));
 			}

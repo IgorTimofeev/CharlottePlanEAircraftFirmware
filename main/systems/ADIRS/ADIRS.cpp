@@ -10,29 +10,11 @@
 
 namespace pizda {
 	void ADIRS::setup() {
-		const auto& ac = Aircraft::getInstance();
-
-		_referencePressurePa.store(ac.settings.adirs.referencePressurePa, std::memory_order_relaxed);
-
 		xTaskCreate(
 			[](void* arg) {
 				static_cast<ADIRS*>(arg)->onStart();
 			},
 			"ADIRS",
-			4 * 1024,
-			this,
-			10,
-			nullptr
-		);
-	}
-
-	void ADIRS::setupAsync() {
-		xTaskCreate(
-			[](void* arg) {
-				static_cast<ADIRS*>(arg)->setup();
-				vTaskDelete(nullptr);
-			},
-			"ADIRSSetup",
 			4 * 1024,
 			this,
 			10,
@@ -58,10 +40,6 @@ namespace pizda {
 
 	float ADIRS::getSlipAndSkidFactor() const {
 		return _slipAndSkidFactor.load(std::memory_order_acquire);
-	}
-
-	void ADIRS::setReferencePressurePa(const uint32_t value) {
-		_referencePressurePa.store(value, std::memory_order_release);
 	}
 
 	float ADIRS::getAirspeedMPS() const {
@@ -163,7 +141,7 @@ namespace pizda {
 		setAltitude(computeAltitude(
 			_pressurePa.load(std::memory_order_acquire),
 			_temperatureC.load(std::memory_order_acquire),
-			_referencePressurePa.load(std::memory_order_acquire)
+			Aircraft::getInstance().settings.adirs.getReferencePressurePa()
 		));
 	}
 
