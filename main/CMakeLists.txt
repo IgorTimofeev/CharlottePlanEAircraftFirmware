@@ -15,7 +15,7 @@ idf_component_register(
         ESP-IDF-Units
         ESP-IDF-SpatialTypes
         ESP-IDF-BitStream
-        ESP-IDF-LowPassFilter
+        ESP-IDF-EMAFilter
         ESP-IDF-PIDController
         ESP-IDF-CircularQueue
         ESP-IDF-BusHAL

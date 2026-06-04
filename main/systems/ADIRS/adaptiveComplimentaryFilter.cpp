@@ -6,7 +6,7 @@
 #include <esp_log.h>
 
 #include <vector3.h>
-#include <lowPassFilter.h>
+#include <EMAFilter.h>
 
 #include "aircraft.h"
 #include "utilities/math.h"
@@ -81,6 +81,6 @@ namespace pizda {
 
 		// But since we're dealing with angles, we should do some range checks to keep result in [-pi; pi] range
 		// Those checks can be done here, but we can simply use LPF, because it behaves the same way
-		return LowPassFilter::applyToAngle(nonGyroValue, gyroValue, gyroTrustFactor);
+		return EMAFilter::applyToAngle(nonGyroValue, gyroValue, gyroTrustFactor);
 	}
 }

@@ -9,7 +9,7 @@
 #include <esp_timer.h>
 
 #include <MPU9250.h>
-#include <lowPassFilter.h>
+#include <EMAFilter.h>
 #include <units.h>
 
 #include "aircraft.h"
@@ -179,9 +179,9 @@ namespace pizda {
 		// Also applying LPF because mag is noisy as shit
 		constexpr static float magLPFFactorPerSecond = 2.f;
 		const auto magLPFFactor = magLPFFactorPerSecond * static_cast<float>(deltaTime) / 1'000'000.f;
-		_magDataFiltered.setX(LowPassFilter::apply(_magDataFiltered.getX(), y - _magBias.getY(), magLPFFactor));
-		_magDataFiltered.setY(LowPassFilter::apply(_magDataFiltered.getY(), x - _magBias.getX(), magLPFFactor));
-		_magDataFiltered.setZ(LowPassFilter::apply(_magDataFiltered.getZ(), -(z - _magBias.getZ()), magLPFFactor));
+		_magDataFiltered.setX(EMAFilter::apply(_magDataFiltered.getX(), y - _magBias.getY(), magLPFFactor));
+		_magDataFiltered.setY(EMAFilter::apply(_magDataFiltered.getY(), x - _magBias.getX(), magLPFFactor));
+		_magDataFiltered.setZ(EMAFilter::apply(_magDataFiltered.getZ(), -(z - _magBias.getZ()), magLPFFactor));
 
 		// _magDataFiltered.setX(y - _magBias.getY());
 		// _magDataFiltered.setY(x - _magBias.getX());

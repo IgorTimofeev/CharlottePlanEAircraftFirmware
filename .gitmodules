@@ -22,9 +22,6 @@
 [submodule "components/ESP-IDF-SpatialTypes"]
 	path = components/ESP-IDF-SpatialTypes
 	url = https://github.com/IgorTimofeev/ESP-IDF-SpatialTypes.git
-[submodule "components/ESP-IDF-LowPassFilter"]
-	path = components/ESP-IDF-LowPassFilter
-	url = https://github.com/IgorTimofeev/ESP-IDF-LowPassFilter.git
 [submodule "components/ESP-IDF-PIDController"]
 	path = components/ESP-IDF-PIDController
 	url = https://github.com/IgorTimofeev/ESP-IDF-PIDController.git
@@ -37,3 +34,6 @@
 [submodule "components/ESP-IDF-ADCVoltmeter"]
 	path = components/ESP-IDF-ADCVoltmeter
 	url = https://github.com/IgorTimofeev/ESP-IDF-ADCVoltmeter.git
+[submodule "components/ESP-IDF-EMAFilter"]
+	path = components/ESP-IDF-EMAFilter
+	url = https://github.com/IgorTimofeev/ESP-IDF-EMAFilter.git

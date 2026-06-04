@@ -6,7 +6,7 @@
 #include <esp_log.h>
 
 #include <units.h>
-#include <lowPassFilter.h>
+#include <EMAFilter.h>
 #include <sys/stat.h>
 
 #include "config.h"
@@ -114,10 +114,10 @@ namespace pizda {
 
 		{
 			if (_emergency) {
-				_rollTargetRad = LowPassFilter::applyToAngle(
+				_rollTargetRad = EMAFilter::applyToAngle(
 					_rollTargetRad,
 					0,
-					LowPassFilter::getDeltaTimeSFactor(ac.settings.autopilot.configuration.rollAngleLPFFactorPerSecond, deltaTimeS)
+					EMAFilter::getDeltaTimeSFactor(ac.settings.autopilot.configuration.rollAngleLPFFactorPerSecond, deltaTimeS)
 				);
 			}
 			else {
@@ -159,10 +159,10 @@ namespace pizda {
 							break;
 					}
 
-					_rollTargetRad = LowPassFilter::applyToAngle(
+					_rollTargetRad = EMAFilter::applyToAngle(
 						_rollTargetRad,
 						rollTargetRad,
-						LowPassFilter::getDeltaTimeSFactor(ac.settings.autopilot.configuration.rollAngleLPFFactorPerSecond, deltaTimeS)
+						EMAFilter::getDeltaTimeSFactor(ac.settings.autopilot.configuration.rollAngleLPFFactorPerSecond, deltaTimeS)
 					);
 				}
 			}
@@ -203,10 +203,10 @@ namespace pizda {
 
 		{
 			if (_emergency) {
-				_pitchTargetRad = LowPassFilter::applyToAngle(
+				_pitchTargetRad = EMAFilter::applyToAngle(
 					_pitchTargetRad,
 					0,
-					LowPassFilter::getDeltaTimeSFactor(ac.settings.autopilot.configuration.pitchAngleLPFFactorPerSecond, deltaTimeS)
+					EMAFilter::getDeltaTimeSFactor(ac.settings.autopilot.configuration.pitchAngleLPFFactorPerSecond, deltaTimeS)
 				);
 			}
 			else {
@@ -272,10 +272,10 @@ namespace pizda {
 						}
 					}
 
-					_pitchTargetRad = LowPassFilter::applyToAngle(
+					_pitchTargetRad = EMAFilter::applyToAngle(
 						_pitchTargetRad,
 						pitchTargetRad,
-						LowPassFilter::getDeltaTimeSFactor(ac.settings.autopilot.configuration.pitchAngleLPFFactorPerSecond, deltaTimeS)
+						EMAFilter::getDeltaTimeSFactor(ac.settings.autopilot.configuration.pitchAngleLPFFactorPerSecond, deltaTimeS)
 					);
 				}
 			}
