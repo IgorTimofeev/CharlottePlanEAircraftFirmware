@@ -13,7 +13,7 @@ namespace pizda {
 		public:
 			void setup();
 			
-			float getSelectedSpeedMps() const;
+			float getSelectedSpeedMPS() const;
 			void setSelectedSpeedMps(float value);
 			
 			uint16_t getSelectedHeadingDeg() const;

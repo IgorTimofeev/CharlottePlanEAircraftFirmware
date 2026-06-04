@@ -12,7 +12,7 @@ namespace pizda {
 	void ADIRS::setup() {
 		const auto& ac = Aircraft::getInstance();
 
-		_referencePressurePa = ac.settings.adirs.referencePressurePa;
+		_referencePressurePa.store(ac.settings.adirs.referencePressurePa, std::memory_order_relaxed);
 
 		xTaskCreate(
 			[](void* arg) {
@@ -41,63 +41,75 @@ namespace pizda {
 	}
 
 	float ADIRS::getRollRad() const {
-		return _rollRad;
+		return _rollRad.load(std::memory_order_acquire);
 	}
 
 	float ADIRS::getPitchRad() const {
-		return _pitchRad;
+		return _pitchRad.load(std::memory_order_acquire);
 	}
 
 	float ADIRS::getYawRad() const {
-		return _yawRad;
+		return _yawRad.load(std::memory_order_acquire);
 	}
 
 	float ADIRS::getHeadingDeg() const {
-		return _headingDeg;
+		return _headingDeg.load(std::memory_order_acquire);
 	}
 
 	float ADIRS::getSlipAndSkidFactor() const {
-		return _slipAndSkidFactor;
-	}
-
-	const GeoCoordinates& ADIRS::getHomeCoordinates() const {
-		return _homeCoordinates;
-	}
-
-	void ADIRS::setHomeCoordinates(const GeoCoordinates& homeCoordinates) {
-		_homeCoordinates = homeCoordinates;
-	}
-
-	const GeoCoordinates& ADIRS::getCoordinates() const {
-		return _coordinates;
+		return _slipAndSkidFactor.load(std::memory_order_acquire);
 	}
 
 	void ADIRS::setReferencePressurePa(const uint32_t value) {
-		_referencePressurePa = value;
+		_referencePressurePa.store(value, std::memory_order_release);
 	}
 
-	float ADIRS::getAirspeedMs() const {
-		return _airspeedMs;
+	float ADIRS::getAirspeedMPS() const {
+		return _airspeedMPS.load(std::memory_order_acquire);
 	}
 
-	void ADIRS::setAirspeedMs(const float value) {
-		_airspeedMs = value;
+	float ADIRS::getHomeLatitude() const {
+		return _homeLatitude.load(std::memory_order_acquire);
+	}
+
+	float ADIRS::getHomeLongitude() const {
+		return _homeLongitude.load(std::memory_order_acquire);
+	}
+
+	float ADIRS::getHomeAltitude() const {
+		return _homeAltitude.load(std::memory_order_acquire);
+	}
+
+	float ADIRS::getLatitude() const {
+		return _latitude.load(std::memory_order_acquire);
+	}
+
+	float ADIRS::getLongitude() const {
+		return _longitude.load(std::memory_order_acquire);
+	}
+
+	float ADIRS::getAltitude() const {
+		return _altitude.load(std::memory_order_acquire);
+	}
+
+	void ADIRS::setAirspeedMS(const float value) {
+		_airspeedMPS.store(value, std::memory_order_release);
 	}
 
 	void ADIRS::setRollRad(const float value) {
-		_rollRad = value;
+		_rollRad.store(value, std::memory_order_release);
 	}
 
 	void ADIRS::setPitchRad(const float value) {
-		_pitchRad = value;
+		_pitchRad.store(value, std::memory_order_release);
 	}
 
 	void ADIRS::setYawRad(const float value) {
-		_yawRad = value;
+		_yawRad.store(value, std::memory_order_release);
 	}
 
 	void ADIRS::updateHeadingFromYaw() {
-		_headingDeg = toDegrees(-_yawRad);
+		_headingDeg.store(toDegrees(-_yawRad), std::memory_order_release);
 	}
 
 	float ADIRS::computeAltitude(const float pressurePa, const float temperatureC, const uint32_t referencePressurePa, const float lapseRateKPM) {
@@ -132,50 +144,68 @@ namespace pizda {
 	}
 
 	void ADIRS::updateSlipAndSkidFactor(const float lateralAccelerationG, const float maxG) {
-		_slipAndSkidFactor =
+		_slipAndSkidFactor.store(
 			std::clamp<float>(-lateralAccelerationG - std::sin(getRollRad()), -maxG, maxG)
-			/ static_cast<float>(maxG);
+				/ static_cast<float>(maxG),
+			std::memory_order_release
+		);
 	}
 
-	void ADIRS::setPressurePa(const float pressurePa) {
-		_pressurePa = pressurePa;
+	void ADIRS::setPressurePa(const float value) {
+		_pressurePa.store(value, std::memory_order_release);
 	}
 
-	void ADIRS::setTemperatureC(const float temperatureC) {
-		_temperatureC = temperatureC;
+	void ADIRS::setTemperatureC(const float value) {
+		_temperatureC.store(value, std::memory_order_release);
 	}
 
 	void ADIRS::updateAltitudeFromPressureTemperatureAndReferenceValue() {
-		_coordinates.setAltitude(computeAltitude(_pressurePa, _temperatureC, _referencePressurePa));
+		setAltitude(computeAltitude(
+			_pressurePa.load(std::memory_order_acquire),
+			_temperatureC.load(std::memory_order_acquire),
+			_referencePressurePa.load(std::memory_order_acquire)
+		));
+	}
+
+	void ADIRS::setHomeCoordinates(const float latitude, const float longitude, const float altitude) {
+		_homeLatitude.store(latitude, std::memory_order_release);
+		_homeLongitude.store(longitude, std::memory_order_release);
+		_homeAltitude.store(altitude, std::memory_order_release);
 	}
 
 	void ADIRS::setLatitude(const float value) {
-		_coordinates.setLatitude(value);
+		_latitude.store(value, std::memory_order_release);
 	}
 
 	void ADIRS::setLongitude(const float value) {
-		_coordinates.setLongitude(value);
+		_longitude.store(value, std::memory_order_release);
+	}
+
+	void ADIRS::setAltitude(const float value) {
+		_altitude.store(value, std::memory_order_release);
 	}
 
 	void ADIRS::onStart() {
 		auto& ac = Aircraft::getInstance();
 
 		while (true) {
+			const auto system = ac.aircraftData.calibration.getSystem();
+
 			if (
-				ac.aircraftData.calibration.calibrating
+				ac.aircraftData.calibration.isCalibrating()
 				&& (
-					ac.aircraftData.calibration.system == AircraftCalibrationSystem::accelAndGyro
-					|| ac.aircraftData.calibration.system == AircraftCalibrationSystem::mag
+					system == AircraftCalibrationSystem::accelAndGyro
+					|| system == AircraftCalibrationSystem::mag
 				)
 			) {
-				if (ac.aircraftData.calibration.system == AircraftCalibrationSystem::accelAndGyro) {
+				if (system == AircraftCalibrationSystem::accelAndGyro) {
 					onCalibrateAccelAndGyro();
 				}
 				else {
 					onCalibrateMag();
 				}
 				
-				ac.aircraftData.calibration.calibrating = false;
+				ac.aircraftData.calibration.setCalibrating(false);
 			}
 			else {
 				onTick();

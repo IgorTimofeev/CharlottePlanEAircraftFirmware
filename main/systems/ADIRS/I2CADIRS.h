@@ -26,7 +26,7 @@ namespace pizda {
 	class I2CADIRS : public ADIRS {
 		public:
 			void setup() override;
-			void setHomeCoordinates(const GeoCoordinates& homeCoordinates) override;
+			void setHomeCoordinates(float latitude, float longitude, float altitude) override;
 
 		protected:
 			void onCalibrateAccelAndGyro() override;

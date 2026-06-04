@@ -30,8 +30,8 @@ namespace pizda {
 		ADIRS::setup();
 	}
 
-	void I2CADIRS::setHomeCoordinates(const GeoCoordinates& homeCoordinates) {
-		ADIRS::setHomeCoordinates(homeCoordinates);
+	void I2CADIRS::setHomeCoordinates(const float latitude, const float longitude, const float altitude) {
+		ADIRS::setHomeCoordinates(latitude, longitude, altitude);
 
 		for (auto& IMU : _IMUs) {
 			IMU.unit.resetIntegratedCoordinates();
@@ -60,7 +60,7 @@ namespace pizda {
 				gSum += IMU.getRawGyroData();
 
 				// Reporting progress
-				ac.aircraftData.calibration.progress = static_cast<uint8_t>(static_cast<uint32_t>(i) * 0xFF / iterations);
+				ac.aircraftData.calibration.setProgress(static_cast<uint8_t>(static_cast<uint32_t>(i) * 0xFF / iterations));
 				ac.transceiver.enqueueSystemPacket(AircraftSystemPacketType::calibration);
 
 				vTaskDelay(pdMS_TO_TICKS(std::max(IMU::MPUSampleIntervalHz / 1000, portTICK_PERIOD_MS)));
@@ -85,7 +85,7 @@ namespace pizda {
 		}
 
 		// Reporting progress once more
-		ac.aircraftData.calibration.progress = 0xFF;
+		ac.aircraftData.calibration.setProgress(0xFF);
 		ac.transceiver.enqueueSystemPacket(AircraftSystemPacketType::calibration);
 
 		ESP_LOGI(_logTag, "accel & gyro calibration finished");
@@ -114,7 +114,7 @@ namespace pizda {
 				max = max.max(magData);
 
 				// Reporting progress
-				ac.aircraftData.calibration.progress = static_cast<uint8_t>(static_cast<uint32_t>(i) * 0xFF / iterations);
+				ac.aircraftData.calibration.setProgress(static_cast<uint8_t>(static_cast<uint32_t>(i) * 0xFF / iterations));
 				ac.transceiver.enqueueSystemPacket(AircraftSystemPacketType::calibration);
 
 				vTaskDelay(pdMS_TO_TICKS(std::max(IMU::magTickIntervalUs / 1000, portTICK_PERIOD_MS)));
@@ -131,7 +131,7 @@ namespace pizda {
 		}
 
 		// Reporting progress once more
-		ac.aircraftData.calibration.progress = 0xFF;
+		ac.aircraftData.calibration.setProgress(0xFF);
 		ac.transceiver.enqueueSystemPacket(AircraftSystemPacketType::calibration);
 
 		ESP_LOGI(_logTag, "mag calibration finished");
@@ -167,7 +167,7 @@ namespace pizda {
 		float rollRadSum = 0;
 		float pitchRadSum = 0;
 		float yawRadSum = 0;
-		float integratedVelocityMsSum = 0;
+		float integratedVelocityMPSSum = 0;
 		Vector3F accelerationGSum {};
 		float integratedLatitudeRadSum = 0;
 		float integratedLongitudeRadSum = 0;
@@ -179,7 +179,7 @@ namespace pizda {
 			pitchRadSum += IMU.unit.getPitchRad();
 			yawRadSum += IMU.unit.getYawRad();
 
-			integratedVelocityMsSum += IMU.unit.getIntegratedVelocityMs();
+			integratedVelocityMPSSum += IMU.unit.getIntegratedVelocityMPS();
 			accelerationGSum += IMU.unit.getAccelerationG();
 
 			integratedLatitudeRadSum += IMU.unit.getIntegratedLatitudeRad();
@@ -193,8 +193,8 @@ namespace pizda {
 		updateHeadingFromYaw();
 
 		// Velocity
-		integratedVelocityMsSum /= _IMUs.size();
-		setAirspeedMs(std::abs(integratedVelocityMsSum));
+		integratedVelocityMPSSum /= _IMUs.size();
+		setAirspeedMS(std::abs(integratedVelocityMPSSum));
 
 		// ESP_LOGI("aefa","vel: %f", integratedVelocityMsSum);
 
@@ -202,9 +202,8 @@ namespace pizda {
 		integratedLatitudeRadSum /= _IMUs.size();
 		integratedLongitudeRadSum /= _IMUs.size();
 
-		const auto& homeCoordinates = getHomeCoordinates();
-		setLatitude(homeCoordinates.getLatitude() + integratedLatitudeRadSum);
-		setLongitude(homeCoordinates.getLongitude() + integratedLongitudeRadSum);
+		setLatitude(getHomeLatitude() + integratedLatitudeRadSum);
+		setLongitude(getHomeLongitude() + integratedLongitudeRadSum);
 
 		// Slip & skid
 		const auto accelerationG = accelerationGSum / _IMUs.size();

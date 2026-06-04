@@ -27,7 +27,7 @@ namespace pizda {
 		);
 	}
 	
-	float FlyByWire::getSelectedSpeedMps() const {
+	float FlyByWire::getSelectedSpeedMPS() const {
 		return _speedSelectedMPS;
 	}
 	
@@ -81,7 +81,7 @@ namespace pizda {
 		_verticalMode = value;
 
 		if (_verticalMode == AutopilotVerticalMode::alt)
-			_altitudeHoldM = Aircraft::getInstance().adirs.getCoordinates().getAltitude();
+			_altitudeHoldM = Aircraft::getInstance().adirs.getAltitude();
 	}
 	
 	bool FlyByWire::isAutothrottleEnabled() const {
@@ -126,8 +126,8 @@ namespace pizda {
 		
 		// -------------------------------- Values --------------------------------
 		
-		const auto speedMPS = ac.adirs.getAirspeedMs();
-		const auto altitudeM = ac.adirs.getCoordinates().getAltitude();
+		const auto airspeedMPS = ac.adirs.getAirspeedMPS();
+		const auto altitudeM = ac.adirs.getAltitude();
 		const auto rollRad = ac.adirs.getRollRad();
 		const auto pitchRad = ac.adirs.getPitchRad();
 		const auto yawRad = ac.adirs.getYawRad();
@@ -146,7 +146,7 @@ namespace pizda {
 				if (_lateralMode == AutopilotLateralMode::stab && _autopilotEngaged) {
 					_rollTargetRad = std::clamp(
 						_rollTargetRad
-							+ (ac.remoteData.raw.controls.ailerons * 2 - 1)
+							+ (ac.remoteData.controls.getAilerons() * 2 - 1)
 							* ac.settings.autopilot.stabilizedModeRollAngleIncrementRadPerSecond
 							* deltaTimeS,
 						-ac.settings.autopilot.maxRollAngleRad,
@@ -192,7 +192,7 @@ namespace pizda {
 
 		// -------------------------------- Vertical --------------------------------
 
-		const auto speedTargetDeltaMPS = _speedSelectedMPS - speedMPS;
+		const auto speedTargetDeltaMPS = _speedSelectedMPS - airspeedMPS;
 		float altitudeTargetDeltaM = _altitudeSelectedM - altitudeM;
 
 		if (_verticalMode == AutopilotVerticalMode::flc) {
@@ -230,7 +230,7 @@ namespace pizda {
 				if (_verticalMode == AutopilotVerticalMode::stab && _autopilotEngaged) {
 					_pitchTargetRad = std::clamp(
 						_pitchTargetRad
-							- (ac.remoteData.raw.controls.elevator * 2 - 1)
+							- (ac.remoteData.controls.getElevator() * 2 - 1)
 							* ac.settings.autopilot.stabilizedModePitchAngleIncrementRadPerSecond
 							* deltaTimeS,
 						-ac.settings.autopilot.maxPitchAngleRad,
@@ -321,7 +321,7 @@ namespace pizda {
 			_aileronsFactor = (0.5f - _aileronsFactor / 2.f) * static_cast<float>(ac.settings.autopilot.maxAileronsPercent) / 100.f;
 		}
 		else {
-			_aileronsFactor = std::clamp(ac.remoteData.raw.controls.ailerons + ac.settings.trim.aileronsTrim, 0.f, 1.f);
+			_aileronsFactor = std::clamp(ac.remoteData.controls.getAilerons() + ac.settings.trim.aileronsTrim, 0.f, 1.f);
 		}
 
 		// -------------------------------- Elevator --------------------------------
@@ -347,15 +347,15 @@ namespace pizda {
 			_elevatorFactor = (0.5f + _elevatorFactor / 2.f) * static_cast<float>(ac.settings.autopilot.maxElevatorPercent) / 100.f;
 		}
 		else {
-			_elevatorFactor = std::clamp(ac.remoteData.raw.controls.elevator + ac.settings.trim.elevatorTrim, 0.f, 1.f);
+			_elevatorFactor = std::clamp(ac.remoteData.controls.getElevator() + ac.settings.trim.elevatorTrim, 0.f, 1.f);
 		}
 
 		// -------------------------------- Rudder --------------------------------
 
 		_rudderFactor =
-			_emergency
+			_emergency || (_autopilotEngaged && _lateralMode != AutopilotLateralMode::dir)
 			? 0.5f
-			: std::clamp(ac.remoteData.raw.controls.rudder + ac.settings.trim.rudderTrim, 0.f, 1.f);
+			: std::clamp(ac.remoteData.controls.getRudder() + ac.settings.trim.rudderTrim, 0.f, 1.f);
 
 		// -------------------------------- Throttle --------------------------------
 
@@ -404,7 +404,7 @@ namespace pizda {
 				}
 			}
 			else {
-				_throttleFactor = ac.remoteData.raw.controls.throttle;
+				_throttleFactor = ac.remoteData.controls.getThrottle();
 			}
 		}
 	}
@@ -435,7 +435,7 @@ namespace pizda {
 			const auto rightTailMotor = ac.motors.getByType(MotorType::tailRight);
 			const auto noseWheelMotor = ac.motors.getByType(MotorType::noseWheel);
 
-			// ESP_LOGI(_logTag, "raw rudder: %f, elevator: %f", ac.remoteData.raw.controls.rudder, ac.remoteData.raw.controls.elevator);
+			// ESP_LOGI(_logTag, "raw rudder: %f, elevator: %f", ac.remoteData.controls.rudder, ac.remoteData.controls.elevator);
 			// ESP_LOGI(_logTag, "factors rudder: %f, elevator: %f", _rudderFactor, _elevatorFactor);
 
 			#ifdef SIM
@@ -457,7 +457,7 @@ namespace pizda {
 			#endif
 
 			// Nose wheel
-			noseWheelMotor->setPowerF(ac.remoteData.raw.controls.rudder);
+			noseWheelMotor->setPowerF(_rudderFactor);
 		}
 		
 		// Flaps
@@ -468,8 +468,8 @@ namespace pizda {
 			if (!leftFlapMotor || !rightFlapMotor)
 				return;
 			
-			leftFlapMotor->setPowerF(ac.remoteData.raw.controls.flaps);
-			rightFlapMotor->setPowerF(ac.remoteData.raw.controls.flaps);
+			leftFlapMotor->setPowerF(ac.remoteData.controls.getFlaps());
+			rightFlapMotor->setPowerF(ac.remoteData.controls.getFlaps());
 		}
 
 		// Camera
@@ -490,8 +490,8 @@ namespace pizda {
 
 			// ESP_LOGI("cam", "pitch: %d, yaw: %d", ac.aircraftData.camera.pitchDeg, ac.aircraftData.camera.yawDeg);
 
-			setPower(cameraPitchMotor, ac.aircraftData.camera.pitchDeg);
-			setPower(cameraYawMotor, ac.aircraftData.camera.yawDeg);
+			setPower(cameraPitchMotor, ac.aircraftData.camera.getPitchDeg());
+			setPower(cameraYawMotor, ac.aircraftData.camera.getYawDeg());
 		}
 	}
 

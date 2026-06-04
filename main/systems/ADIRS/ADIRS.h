@@ -1,5 +1,7 @@
 #pragma once
 
+#include <atomic>
+
 #include <esp_log.h>
 
 #include <geoCoordinates.h>
@@ -20,18 +22,18 @@ namespace pizda {
 			float getPitchRad() const;
 			float getYawRad() const;
 			float getHeadingDeg() const;
-
-			//			int32_t _speedTime = 0;
-//			float _speed = 0;
-			
 			float getSlipAndSkidFactor() const;
 
-			const GeoCoordinates& getHomeCoordinates() const;
-			virtual void setHomeCoordinates(const GeoCoordinates& homeCoordinates);
-
-			const GeoCoordinates& getCoordinates() const;
 			void setReferencePressurePa(const uint32_t value);
-			float getAirspeedMs() const;
+			float getAirspeedMPS() const;
+
+			float getHomeLatitude() const;
+			float getHomeLongitude() const;
+			float getHomeAltitude() const;
+
+			float getLatitude() const;
+			float getLongitude() const;
+			float getAltitude() const;
 
 		protected:
 			constexpr static auto _logTag = "ADIRS";
@@ -44,7 +46,7 @@ namespace pizda {
 			void setPitchRad(const float value);
 			void setYawRad(const float value);
 			void updateHeadingFromYaw();
-			void setAirspeedMs(const float value);
+			void setAirspeedMS(const float value);
 
 			static float computeAltitude(
 				const float pressurePa,
@@ -54,29 +56,35 @@ namespace pizda {
 			);
 
 			void updateSlipAndSkidFactor(const float lateralAccelerationG, const float maxG);
-			void setPressurePa(const float pressurePa);
-			void setTemperatureC(const float temperatureC);
+			void setPressurePa(const float value);
+			void setTemperatureC(const float value);
 			void updateAltitudeFromPressureTemperatureAndReferenceValue();
+
+			virtual void setHomeCoordinates(const float latitude, const float longitude, const float altitude);
+
+			void setHomeLatitude(const float value);
+			void setHomeLongitude(const float value);
+			void setHomeAltitude(const float value);
+
 			void setLatitude(const float value);
 			void setLongitude(const float value);
+			void setAltitude(const float value);
 
 		private:
-			float _rollRad = 0;
-			float _pitchRad = 0;
+			std::atomic<float> _rollRad { 0.0f };
+			std::atomic<float> _pitchRad { 0.0f };
 			
-			float _yawRad = 0;
-			float _headingDeg = 0;
+			std::atomic<float> _yawRad { 0.0f };
+			std::atomic<float> _headingDeg { 0.0f };
 
-			float _slipAndSkidFactor = 0;
+			std::atomic<float> _slipAndSkidFactor { 0.0f };
 
-			Vector3F _integratedPositionMPS {};
+			std::atomic<float> _airspeedMPS { 0.0f };
 
-			float _airspeedMs = 0;
+			std::atomic<float> _pressurePa { 0.0f };
+			std::atomic<float> _temperatureC { 0.0f };
 
-			float _pressurePa = 0;
-			float _temperatureC = 0;
-
-			uint32_t _referencePressurePa = 101325;
+			std::atomic<uint32_t> _referencePressurePa { 101325 };
 
 			// // 60.014002019765776, 29.717151511256816
 			// // ОПЯТЬ ЖЕНЩИНЫ??? ФЕДЯ СУКА ЭТО ТЫ ЕБЛАН СДЕЛАЛ
@@ -88,14 +96,14 @@ namespace pizda {
 
 			// От греха подальше, а то, блядь, по Кронштадту ебнули сегодня, и нормальным авиамоделистам
 			// из-за такой хуйни остается лишь сосать бибу
-			GeoCoordinates _homeCoordinates {
-				toRadians(59.812414f),
-				toRadians(30.555595f),
-				0
-			};
+			std::atomic<float> _homeLatitude { toRadians(59.812414f) };
+			std::atomic<float> _homeLongitude { toRadians(30.555595f) };
+			std::atomic<float> _homeAltitude { 0.0f };
 
-			GeoCoordinates _coordinates = _homeCoordinates;
-			
+			std::atomic<float> _latitude { _homeLatitude.load(std::memory_order_acquire) };
+			std::atomic<float> _longitude { _homeLongitude.load(std::memory_order_acquire) };
+			std::atomic<float> _altitude { _homeAltitude.load(std::memory_order_acquire) };
+
 			[[noreturn]] void onStart();
 	};
 }

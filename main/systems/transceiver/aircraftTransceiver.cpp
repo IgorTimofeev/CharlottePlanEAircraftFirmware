@@ -102,11 +102,11 @@ namespace pizda {
 						/ static_cast<float>((1 << RemoteControlsPacket::motorLengthBits) - 1);
 				};
 
-				ac.remoteData.raw.controls.throttle = readMotor();
-				ac.remoteData.raw.controls.ailerons = readMotor();
-				ac.remoteData.raw.controls.elevator = readMotor();
-				ac.remoteData.raw.controls.rudder = readMotor();
-				ac.remoteData.raw.controls.flaps = readMotor();
+				ac.remoteData.controls.setThrottle(readMotor());
+				ac.remoteData.controls.setAilerons(readMotor());
+				ac.remoteData.controls.setElevator(readMotor());
+				ac.remoteData.controls.setRudder(readMotor());
+				ac.remoteData.controls.setFlaps(readMotor());
 
 				return true;
 			}
@@ -220,9 +220,9 @@ namespace pizda {
 
 				auto& ac = Aircraft::getInstance();
 
-				ac.aircraftData.calibration.system = static_cast<AircraftCalibrationSystem>(stream.readUint8(RemoteSystemPacket::calibrateSystemLengthBits));
-				ac.aircraftData.calibration.progress = 0;
-				ac.aircraftData.calibration.calibrating = true;
+				ac.aircraftData.calibration.setSystem(static_cast<AircraftCalibrationSystem>(stream.readUint8(RemoteSystemPacket::calibrateSystemLengthBits)));
+				ac.aircraftData.calibration.setProgress(0);
+				ac.aircraftData.calibration.setCalibrating(true);
 
 				//		ESP_LOGI(_logTag, "Received calibrate packet");
 
@@ -240,11 +240,14 @@ namespace pizda {
 
 				auto& ac = Aircraft::getInstance();
 
-				ac.aircraftData.camera.pitchDeg = stream.readInt16(RemoteSystemPacket::cameraPitchLengthBits);
-				ac.aircraftData.camera.yawDeg = stream.readInt16(RemoteSystemPacket::cameraYawLengthBits);
+				auto pitchDeg = stream.readInt16(RemoteSystemPacket::cameraPitchLengthBits);
+				auto yawDeg = stream.readInt16(RemoteSystemPacket::cameraYawLengthBits);
 
-				config::camera::clamp(ac.aircraftData.camera.pitchDeg, ac.aircraftData.camera.yawDeg);
-				config::camera::correctPitchPitchForYaw(ac.aircraftData.camera.pitchDeg, ac.aircraftData.camera.yawDeg);
+				config::camera::clamp(pitchDeg, yawDeg);
+				config::camera::correctPitchPitchForYaw(pitchDeg, yawDeg);
+
+				ac.aircraftData.camera.setPitchDeg(pitchDeg);
+				ac.aircraftData.camera.setYawDeg(yawDeg);
 
 				return true;
 			}
@@ -359,11 +362,11 @@ namespace pizda {
 
 				auto& ac = Aircraft::getInstance();
 
-				ac.adirs.setHomeCoordinates({
+				ac.adirs.setHomeCoordinates(
 					readLatitude(stream, RemoteSystemPacket::homeCoordinatesLatitudeLengthBits),
 					readLongitude(stream, RemoteSystemPacket::homeCoordinatesLongitudeLengthBits),
 					0
-				});
+				);
 
 				return true;
 			}
@@ -735,7 +738,7 @@ namespace pizda {
 				// -------------------------------- Speed --------------------------------
 
 				const auto speedFactor =
-					std::min<float>(ac.adirs.getAirspeedMs(), AircraftSTierTelemetryPacket::speedMaxMPS)
+					std::min<float>(ac.adirs.getAirspeedMPS(), AircraftSTierTelemetryPacket::speedMaxMPS)
 					/ static_cast<float>(AircraftSTierTelemetryPacket::speedMaxMPS);
 
 				const auto speedMapped = static_cast<float>((1 << AircraftSTierTelemetryPacket::speedLengthBits) - 1) * speedFactor;
@@ -746,7 +749,7 @@ namespace pizda {
 
 				writeAltitude(
 					stream,
-					ac.adirs.getCoordinates().getAltitude(),
+					ac.adirs.getAltitude(),
 					AircraftSTierTelemetryPacket::altitudeLengthBits,
 					AircraftSTierTelemetryPacket::altitudeMinM,
 					AircraftSTierTelemetryPacket::altitudeMaxM
@@ -773,9 +776,8 @@ namespace pizda {
 
 				// -------------------------------- Latitude & longitude --------------------------------
 
-				const auto& coordinates = ac.adirs.getCoordinates();
-				writeLatitude(stream, coordinates.getLatitude(), AircraftATierTelemetryPacket::latitudeLengthBits);
-				writeLongitude(stream, coordinates.getLongitude(), AircraftATierTelemetryPacket::longitudeLengthBits);
+				writeLatitude(stream, ac.adirs.getLatitude(), AircraftATierTelemetryPacket::latitudeLengthBits);
+				writeLongitude(stream, ac.adirs.getLongitude(), AircraftATierTelemetryPacket::longitudeLengthBits);
 
 				break;
 			}
@@ -836,8 +838,8 @@ namespace pizda {
 			case AircraftSystemPacketType::calibration: {
 				const auto& ac = Aircraft::getInstance();
 
-				stream.writeUint8(std::to_underlying(ac.aircraftData.calibration.system), AircraftSystemCalibrationPacket::systemLengthBits);
-				stream.writeUint8(static_cast<uint16_t>(ac.aircraftData.calibration.progress) * ((1 << AircraftSystemCalibrationPacket::progressLengthBits) - 1) / 0xFF, AircraftSystemCalibrationPacket::progressLengthBits);
+				stream.writeUint8(std::to_underlying(ac.aircraftData.calibration.getSystem()), AircraftSystemCalibrationPacket::systemLengthBits);
+				stream.writeUint8(static_cast<uint16_t>(ac.aircraftData.calibration.getProgress()) * ((1 << AircraftSystemCalibrationPacket::progressLengthBits) - 1) / 0xFF, AircraftSystemCalibrationPacket::progressLengthBits);
 
 				break;
 			}

@@ -58,15 +58,15 @@ namespace pizda {
     	return _integratedLongitudeRad;
     }
 
-	float IMU::getIntegratedVelocityMs() const {
-		return _integratedVelocityMs;
+	float IMU::getIntegratedVelocityMPS() const {
+		return _integratedVelocityMPS;
 	}
 
 	void IMU::resetIntegratedCoordinates() {
-    	_integratedTiltCompensatedVelocityMs = {};
+    	_integratedTiltCompensatedVelocityMPS = {};
 		_integratedAlignedPositionM = {};
 
-    	_integratedVelocityMs = 0;
+    	_integratedVelocityMPS = 0;
     	_integratedLongitudeRad = 0;
     	_integratedLongitudeRad = 0;
 	}
@@ -265,21 +265,21 @@ namespace pizda {
 			// Computing integrated velocity
 			// accelerationMPS = accelerationG * ~9.8
 			// velocityMPS = accelerationMPS * deltaTime
-			_integratedVelocityMs += (-tiltCompensatedAccelData.getY()) * Units::earthGMs2 * FIFOSampleIntervalS;
+			_integratedVelocityMPS += (-tiltCompensatedAccelData.getY()) * Units::earthGMPS2 * FIFOSampleIntervalS;
 
 			// -------------------------------- Position --------------------------------
 
 			// Computing integrated velocity again, but now using tilt compensation
-			_integratedTiltCompensatedVelocityMs += tiltCompensatedAccelData * Units::earthGMs2 * FIFOSampleIntervalS;
+			_integratedTiltCompensatedVelocityMPS += tiltCompensatedAccelData * Units::earthGMPS2 * FIFOSampleIntervalS;
 
 			// Computing integrated position relative to start point
-			auto integratedMovementM = _integratedTiltCompensatedVelocityMs * FIFOSampleIntervalS;
+			auto integratedMovementM = _integratedTiltCompensatedVelocityMPS * FIFOSampleIntervalS;
 			// Aligning movement vector to Earth axis (Y should point to north)
 			integratedMovementM = integratedMovementM.rotateAroundYAxis(_yawRad);
 			// Accumulating relative position
 			_integratedAlignedPositionM += integratedMovementM;
 
-			// ESP_LOGI(_logTag, "Acc vel: %f x %f x %f", _integratedTiltCompensatedVelocityMs.getX(), _integratedTiltCompensatedVelocityMs.getY(), _integratedTiltCompensatedVelocityMs.getZ());
+			// ESP_LOGI(_logTag, "Acc vel: %f x %f x %f", _integratedTiltCompensatedVelocityMPS.getX(), _integratedTiltCompensatedVelocityMPS.getY(), _integratedTiltCompensatedVelocityMPS.getZ());
 			// ESP_LOGI(_logTag, "Acc pos: %f x %f x %f", _integratedPositionM.getX(), _integratedPositionM.getY(), _integratedPositionM.getZ());
 		}
 
