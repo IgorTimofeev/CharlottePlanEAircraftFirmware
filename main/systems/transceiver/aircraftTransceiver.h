@@ -19,25 +19,39 @@ namespace pizda {
 
 		0
 	> {
+		// -------------------------------- Main --------------------------------
+
 		public:
 			AircraftTransceiver();
 
 		protected:
-			[[noreturn]] void onStart() override;
+			void onTick() override;
 			void onTransmit(BitStream& stream, AircraftPacketType packetType) override;
 			bool onReceive(BitStream& stream, RemotePacketType packetType, uint8_t payloadLength) override;
-			bool receiveRemoteSystemPacket(BitStream& stream, uint8_t payloadLength);
 			void onConnectionStateChanged() override;
 
 		private:
-			constexpr static uint32_t _trendsInterval = 500'000;
-			int64_t _trendsTime = 0;
-			float _trendsAirspeedPrevMPS = 0;
-			float _trendsAltitudePrevM = 0;
+			bool _receiveMode = true;
+			int64_t _transmitTimeUs = 0;
 
-			TransceiverCommunicationSettings _tmpCommunicationSettings {};
-			int64_t _communicationSettingsACKTime = 0;
+		// -------------------------------- Communication settings --------------------------------
 
+		private:
+			TransceiverCommunicationSettings _receivedCommunicationSettings {};
+
+			void onCommunicationSettingsSyncCheckScheduled() override;
+
+			void onCommunicationSettingsSyncCheckCompleted() override;
+
+			// -------------------------------- Receiving --------------------------------
+
+		private:
+			bool receiveRemoteSystemPacket(BitStream& stream, uint8_t payloadLength);
+
+
+		// -------------------------------- Transmitting --------------------------------
+
+		private:
 			void transmitAircraftSystemPacket(BitStream& stream);
 	};
 }

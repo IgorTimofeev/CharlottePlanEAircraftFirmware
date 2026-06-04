@@ -23,60 +23,34 @@ namespace pizda {
 
 	}
 
-	void AircraftTransceiver::onStart() {
-		auto& ac = Aircraft::getInstance();
-		// Receive -> wait -> transmit
+	void AircraftTransceiver::onTick() {
+		if (_receiveMode) {
+			if (receive(1'000'000)) {
+				_receiveMode = false;
 
-		bool receiveMode = true;
-		int64_t transmitTime = 0;
-
-		while (true) {
-			// Should schedule communication settings sync check
-			if (_communicationSettingsACKTime < 0) {
-				setCommunicationSettings(_tmpCommunicationSettings);
-
-				_communicationSettingsACKTime = esp_timer_get_time() + 2'000'000;
+				_transmitTimeUs = esp_timer_get_time() + 8'000;
 			}
-			// Should perform communication settings sync check
-			else if (_communicationSettingsACKTime > 0 && esp_timer_get_time() >= _communicationSettingsACKTime) {
-				// Received and decoded enough packets to consider the connection is stable
-				if (getRXPPS() > 5) {
-					ESP_LOGI(_logTag, "communication settings synchronized");
+		}
+		else {
+			if (esp_timer_get_time() >= _transmitTimeUs) {
+				transmit(1'000'000);
 
-					ac.settings.transceiver.communication = _tmpCommunicationSettings;
-					ac.settings.transceiver.scheduleWrite();
-				}
-				// Or not enough...
-				else {
-					ESP_LOGI(_logTag, "communication settings change timed out, falling back to default");
-
-					// Falling back to default communication settings
-					setCommunicationSettings(config::XCVR::communicationSettings);
-				}
-
-				_communicationSettingsACKTime = 0;
-			}
-
-			if (receiveMode) {
-				if (receive(1'000'000)) {
-					receiveMode = false;
-
-					transmitTime = esp_timer_get_time() + 8'000;
-				}
+				_receiveMode = true;
 			}
 			else {
-				if (esp_timer_get_time() >= transmitTime) {
-					transmit(1'000'000);
-
-					receiveMode = true;
-				}
-				else {
-					taskYIELD();
-				}
+				taskYIELD();
 			}
-
-			PPSTick();
 		}
+	}
+
+	void AircraftTransceiver::onCommunicationSettingsSyncCheckScheduled() {
+		setCommunicationSettings(_receivedCommunicationSettings);
+	}
+
+	void AircraftTransceiver::onCommunicationSettingsSyncCheckCompleted() {
+		auto& ac = Aircraft::getInstance();
+		ac.settings.transceiver.communication = _receivedCommunicationSettings;
+		ac.settings.transceiver.scheduleWrite();
 	}
 
 	void AircraftTransceiver::onConnectionStateChanged() {
@@ -346,28 +320,28 @@ namespace pizda {
 				))
 					return false;
 
-				_tmpCommunicationSettings.frequencyHz = stream.readUint16(RemoteSystemCommunicationSettingsPacket::RFFrequencyLengthBits) * 1'000'000;
-				_tmpCommunicationSettings.bandwidth = static_cast<SX1262::LoRaBandwidth>(stream.readUint8(RemoteSystemCommunicationSettingsPacket::bandwidthLengthBits));
-				_tmpCommunicationSettings.spreadingFactor = stream.readUint8(RemoteSystemCommunicationSettingsPacket::spreadingFactorLengthBits);
-				_tmpCommunicationSettings.codingRate = static_cast<SX1262::LoRaCodingRate>(stream.readUint8(RemoteSystemCommunicationSettingsPacket::codingRateLengthBits));
-				_tmpCommunicationSettings.syncWord = stream.readUint8(RemoteSystemCommunicationSettingsPacket::syncWordLengthBits);
-				_tmpCommunicationSettings.preambleLength = stream.readUint16(RemoteSystemCommunicationSettingsPacket::preambleLengthLengthBits);
+				_receivedCommunicationSettings.frequencyHz = stream.readUint16(RemoteSystemCommunicationSettingsPacket::RFFrequencyLengthBits) * 1'000'000;
+				_receivedCommunicationSettings.bandwidth = static_cast<SX1262::LoRaBandwidth>(stream.readUint8(RemoteSystemCommunicationSettingsPacket::bandwidthLengthBits));
+				_receivedCommunicationSettings.spreadingFactor = stream.readUint8(RemoteSystemCommunicationSettingsPacket::spreadingFactorLengthBits);
+				_receivedCommunicationSettings.codingRate = static_cast<SX1262::LoRaCodingRate>(stream.readUint8(RemoteSystemCommunicationSettingsPacket::codingRateLengthBits));
+				_receivedCommunicationSettings.syncWord = stream.readUint8(RemoteSystemCommunicationSettingsPacket::syncWordLengthBits);
+				_receivedCommunicationSettings.preambleLength = stream.readUint16(RemoteSystemCommunicationSettingsPacket::preambleLengthLengthBits);
 
-				_tmpCommunicationSettings.currentLimitMA = stream.readInt8(RemoteSystemCommunicationSettingsPacket::currentLimitMALengthBits);
-				_tmpCommunicationSettings.powerDBm = stream.readInt8(RemoteSystemCommunicationSettingsPacket::powerDBmLengthBits);
+				_receivedCommunicationSettings.currentLimitMA = stream.readInt8(RemoteSystemCommunicationSettingsPacket::currentLimitMALengthBits);
+				_receivedCommunicationSettings.powerDBm = stream.readInt8(RemoteSystemCommunicationSettingsPacket::powerDBmLengthBits);
 
-				_tmpCommunicationSettings.sanitize();
+				_receivedCommunicationSettings.sanitize();
 
 				ESP_LOGI(_logTag, "received communication settings");
-				ESP_LOGI(_logTag, "RFFrequencyHz: %d", _tmpCommunicationSettings.frequencyHz);
-				ESP_LOGI(_logTag, "bandwidth: %d", std::to_underlying(_tmpCommunicationSettings.bandwidth));
-				ESP_LOGI(_logTag, "spreadingFactor: %d", _tmpCommunicationSettings.spreadingFactor);
-				ESP_LOGI(_logTag, "codingRate: %d",std::to_underlying(_tmpCommunicationSettings.codingRate));
-				ESP_LOGI(_logTag, "syncWord: %d", _tmpCommunicationSettings.syncWord);
-				ESP_LOGI(_logTag, "preambleLength: %d", _tmpCommunicationSettings.preambleLength);
+				ESP_LOGI(_logTag, "RFFrequencyHz: %d", _receivedCommunicationSettings.frequencyHz);
+				ESP_LOGI(_logTag, "bandwidth: %d", std::to_underlying(_receivedCommunicationSettings.bandwidth));
+				ESP_LOGI(_logTag, "spreadingFactor: %d", _receivedCommunicationSettings.spreadingFactor);
+				ESP_LOGI(_logTag, "codingRate: %d",std::to_underlying(_receivedCommunicationSettings.codingRate));
+				ESP_LOGI(_logTag, "syncWord: %d", _receivedCommunicationSettings.syncWord);
+				ESP_LOGI(_logTag, "preambleLength: %d", _receivedCommunicationSettings.preambleLength);
 
-				ESP_LOGI(_logTag, "currentLimitMA: %d", _tmpCommunicationSettings.currentLimitMA);
-				ESP_LOGI(_logTag, "powerDBm: %d", _tmpCommunicationSettings.powerDBm);
+				ESP_LOGI(_logTag, "currentLimitMA: %d", _receivedCommunicationSettings.currentLimitMA);
+				ESP_LOGI(_logTag, "powerDBm: %d", _receivedCommunicationSettings.powerDBm);
 
 				enqueueSystemPacket(AircraftSystemPacketType::communicationSettingsACK);
 
@@ -868,7 +842,7 @@ namespace pizda {
 				break;
 			}
 			case AircraftSystemPacketType::communicationSettingsACK: {
-				_communicationSettingsACKTime = -1;
+				requestCommunicationSettingsSyncCheck();
 
 				break;
 			}
