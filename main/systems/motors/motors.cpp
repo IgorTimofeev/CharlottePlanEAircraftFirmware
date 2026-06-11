@@ -50,7 +50,8 @@ namespace pizda {
 
 	Motor* Motors::getByType(const MotorType type) {
 		switch (type) {
-			case MotorType::throttle: return &_throttle;
+			case MotorType::throttleLeft: return &_throttleLeft;
+			case MotorType::throttleRight: return &_throttleRight;
 			case MotorType::noseWheel: return &_noseWheel;
 
 			case MotorType::flapLeft: return &_flapLeft;

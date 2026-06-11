@@ -62,7 +62,7 @@ namespace pizda {
 
 				const auto packet = reinterpret_cast<SimLinkAircraftPacket*>(_buffer);
 
-				const auto throttle = ac.motors.getByType(MotorType::throttle);
+				const auto throttle = ac.motors.getByType(MotorType::throttleLeft);
 				const auto ailerons = ac.motors.getByType(MotorType::aileronLeft);
 				const auto elevator = ac.motors.getByType(MotorType::tailLeft);
 				const auto rudder = ac.motors.getByType(MotorType::tailRight);

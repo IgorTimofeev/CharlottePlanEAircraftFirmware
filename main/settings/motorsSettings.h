@@ -11,7 +11,11 @@ namespace pizda {
 	
 	class MotorsSettings : public NVSSettings {
 		public:
-			MotorSettings throttle {};
+			MotorSettings cameraPitch {};
+			MotorSettings cameraYaw {};
+
+			MotorSettings throttleLeft {};
+			MotorSettings throttleRight {};
 			MotorSettings noseWheel {};
 			
 			MotorSettings flapLeft {};
@@ -22,13 +26,14 @@ namespace pizda {
 			
 			MotorSettings tailLeft {};
 			MotorSettings tailRight {};
-			
-			MotorSettings cameraPitch {};
-			MotorSettings cameraYaw {};
 
 			MotorSettings* getByType(const MotorType type) {
 				switch (type) {
-					case MotorType::throttle: return &throttle;
+					case MotorType::cameraPitch: return &cameraPitch;
+					case MotorType::cameraYaw: return &cameraPitch;
+
+					case MotorType::throttleLeft: return &throttleLeft;
+					case MotorType::throttleRight: return &throttleRight;
 					case MotorType::noseWheel: return &noseWheel;
 
 					case MotorType::flapLeft: return &flapLeft;
@@ -39,9 +44,6 @@ namespace pizda {
 
 					case MotorType::tailLeft: return &tailLeft;
 					case MotorType::tailRight: return &tailRight;
-
-					case MotorType::cameraPitch: return &cameraPitch;
-					case MotorType::cameraYaw: return &cameraPitch;
 
 					default: return nullptr;
 				}
@@ -55,11 +57,38 @@ namespace pizda {
 			void onRead(const NVSStream& stream) override {
 				readMotor(
 					stream,
-					throttle,
+					cameraPitch,
 
-					_throttleMin,
-					_throttleMax,
-					_throttleReverse
+					_cameraPitchMin,
+					_cameraPitchMax,
+					_cameraPitchReverse
+				);
+
+				readMotor(
+					stream,
+					cameraYaw,
+
+					_cameraYawMin,
+					_cameraYawMax,
+					_cameraYawReverse
+				);
+
+				readMotor(
+					stream,
+					throttleLeft,
+
+					_throttleLeftMin,
+					_throttleLeftMax,
+					_throttleLeftReverse
+				);
+
+				readMotor(
+					stream,
+					throttleRight,
+
+					_throttleRightMin,
+					_throttleRightMax,
+					_throttleRightReverse
 				);
 
 				readMotor(
@@ -123,35 +152,44 @@ namespace pizda {
 					_tailRightMin,
 					_tailRightMax,
 					_tailRightReverse
-				);
-				
-				readMotor(
-					stream,
-					cameraPitch,
-
-					_cameraPitchMin,
-					_cameraPitchMax,
-					_cameraPitchReverse
-				);
-
-				readMotor(
-					stream,
-					cameraYaw,
-
-					_cameraYawMin,
-					_cameraYawMax,
-					_cameraYawReverse
 				);
 			}
 
 			void onWrite(const NVSStream& stream) override {
 				writeMotor(
 					stream,
-					throttle,
+					cameraPitch,
 
-					_throttleMin,
-					_throttleMax,
-					_throttleReverse
+					_cameraPitchMin,
+					_cameraPitchMax,
+					_cameraPitchReverse
+				);
+
+				writeMotor(
+					stream,
+					cameraYaw,
+
+					_cameraYawMin,
+					_cameraYawMax,
+					_cameraYawReverse
+				);
+
+				writeMotor(
+					stream,
+					throttleLeft,
+
+					_throttleLeftMin,
+					_throttleLeftMax,
+					_throttleLeftReverse
+				);
+
+				writeMotor(
+					stream,
+					throttleRight,
+
+					_throttleRightMin,
+					_throttleRightMax,
+					_throttleRightReverse
 				);
 
 				writeMotor(
@@ -216,32 +254,26 @@ namespace pizda {
 					_tailRightMax,
 					_tailRightReverse
 				);
-				
-				writeMotor(
-					stream,
-					cameraPitch,
-
-					_cameraPitchMin,
-					_cameraPitchMax,
-					_cameraPitchReverse
-				);
-
-				writeMotor(
-					stream,
-					cameraYaw,
-
-					_cameraYawMin,
-					_cameraYawMax,
-					_cameraYawReverse
-				);
 			}
 
 		private:
 			constexpr static auto _namespace = "mt2";
 
-			constexpr static auto _throttleMin = "thm";
-			constexpr static auto _throttleMax = "thx";
-			constexpr static auto _throttleReverse = "thr";
+			constexpr static auto _cameraPitchMin = "cpm";
+			constexpr static auto _cameraPitchMax = "cpx";
+			constexpr static auto _cameraPitchReverse = "cpr";
+
+			constexpr static auto _cameraYawMin = "cym";
+			constexpr static auto _cameraYawMax = "cyx";
+			constexpr static auto _cameraYawReverse = "cyr";
+
+			constexpr static auto _throttleLeftMin = "tlm";
+			constexpr static auto _throttleLeftMax = "tlx";
+			constexpr static auto _throttleLeftReverse = "tlr";
+
+			constexpr static auto _throttleRightMin = "trm";
+			constexpr static auto _throttleRightMax = "trx";
+			constexpr static auto _throttleRightReverse = "trr";
 
 			constexpr static auto _noseWheelMin = "nwm";
 			constexpr static auto _noseWheelMax = "nwx";
@@ -263,21 +295,13 @@ namespace pizda {
 			constexpr static auto _aileronRightMax = "arx";
 			constexpr static auto _aileronRightReverse = "arr";
 
-			constexpr static auto _tailLeftMin = "tlm";
-			constexpr static auto _tailLeftMax = "tlx";
-			constexpr static auto _tailLeftReverse = "tlr";
+			constexpr static auto _tailLeftMin = "llm";
+			constexpr static auto _tailLeftMax = "llx";
+			constexpr static auto _tailLeftReverse = "llr";
 
-			constexpr static auto _tailRightMin = "trm";
-			constexpr static auto _tailRightMax = "trx";
-			constexpr static auto _tailRightReverse = "trr";
-
-			constexpr static auto _cameraPitchMin = "cpm";
-			constexpr static auto _cameraPitchMax = "cpx";
-			constexpr static auto _cameraPitchReverse = "cpr";
-
-			constexpr static auto _cameraYawMin = "cym";
-			constexpr static auto _cameraYawMax = "cyx";
-			constexpr static auto _cameraYawReverse = "cyr";
+			constexpr static auto _tailRightMin = "lrm";
+			constexpr static auto _tailRightMax = "lrx";
+			constexpr static auto _tailRightReverse = "lrr";
 			
 			static void readMotor(
 				const NVSStream& stream,

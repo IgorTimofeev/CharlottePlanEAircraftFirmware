@@ -36,8 +36,8 @@ namespace pizda {
 		cameraPitch,
 		cameraYaw,
 
-		throttle,
-		reverse,
+		throttleLeft,
+		throttleRight,
 		noseWheel,
 
 		flapLeft,

@@ -24,13 +24,17 @@ namespace pizda {
 
 			Motor _cameraPitch {};
 			Motor _cameraYaw {};
-			Motor _throttle {};
+
+			Motor _throttleLeft {};
+			Motor _throttleRight {};
 			Motor _noseWheel {};
-			Motor _reverse {};
+
 			Motor _flapLeft {};
 			Motor _aileronLeft {};
+
 			Motor _flapRight {};
 			Motor _aileronRight {};
+
 			Motor _tailLeft {};
 			Motor _tailRight {};
 

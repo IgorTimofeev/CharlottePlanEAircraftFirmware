@@ -47,6 +47,10 @@ namespace pizda {
 		return _pitchTargetRad;
 	}
 
+	float FlyByWire::getThrottleFactor() const {
+		return _throttleFactor;
+	}
+
 	AutopilotLateralMode FlyByWire::getLateralMode() const {
 		return _lateralMode.load(std::memory_order_acquire);
 	}
@@ -335,10 +339,12 @@ namespace pizda {
 
 		// -------------------------------- Rudder --------------------------------
 
+		_noseWheelFactor = std::clamp(ac.remoteData.controls.getRudder() + ac.settings.trim.getRudderTrim(), 0.f, 1.f);
+
 		_rudderFactor =
 			_emergency || (_autopilotEngaged && lateralMode != AutopilotLateralMode::dir)
 			? 0.5f
-			: std::clamp(ac.remoteData.controls.getRudder() + ac.settings.trim.getRudderTrim(), 0.f, 1.f);
+			: _noseWheelFactor;
 
 		// -------------------------------- Throttle --------------------------------
 
@@ -396,27 +402,17 @@ namespace pizda {
 		auto& ac = Aircraft::getInstance();
 		
 		// Throttle
-		{
-			const auto motor = ac.motors.getByType(MotorType::throttle);
-			
-			if (motor)
-				motor->setPowerF(_throttleFactor);
-		}
-		
-		// Ailerons
-		{
-			const auto leftAileronMotor = ac.motors.getByType(MotorType::aileronLeft);
-			const auto rightAileronMotor = ac.motors.getByType(MotorType::aileronRight);
+		ac.motors.getByType(MotorType::throttleLeft)->setPowerF(_throttleFactor);
+		ac.motors.getByType(MotorType::throttleRight)->setPowerF(_throttleFactor);
 
-			leftAileronMotor->setPowerF(_aileronsFactor);
-			rightAileronMotor->setPowerF(1.f - _aileronsFactor);
-		}
-		
+		// Ailerons
+		ac.motors.getByType(MotorType::aileronLeft)->setPowerF(_aileronsFactor);
+		ac.motors.getByType(MotorType::aileronRight)->setPowerF(1.f - _aileronsFactor);
+
 		// Elevator & rudder
 		{
 			const auto leftTailMotor = ac.motors.getByType(MotorType::tailLeft);
 			const auto rightTailMotor = ac.motors.getByType(MotorType::tailRight);
-			const auto noseWheelMotor = ac.motors.getByType(MotorType::noseWheel);
 
 			// ESP_LOGI(_logTag, "raw rudder: %f, elevator: %f", ac.remoteData.controls.rudder, ac.remoteData.controls.elevator);
 			// ESP_LOGI(_logTag, "factors rudder: %f, elevator: %f", _rudderFactor, _elevatorFactor);
@@ -438,33 +434,19 @@ namespace pizda {
 				rightTailMotor->setPowerF(rightPower);
 
 			#endif
+		}
 
-			// Nose wheel
-			noseWheelMotor->setPowerF(_rudderFactor);
-		}
-		
+		// Nose wheel
+		ac.motors.getByType(MotorType::noseWheel)->setPowerF(_noseWheelFactor);
+
 		// Flaps
-		{
-			const auto leftFlapMotor = ac.motors.getByType(MotorType::flapLeft);
-			const auto rightFlapMotor = ac.motors.getByType(MotorType::flapRight);
-			
-			if (!leftFlapMotor || !rightFlapMotor)
-				return;
-			
-			leftFlapMotor->setPowerF(ac.remoteData.controls.getFlaps());
-			rightFlapMotor->setPowerF(ac.remoteData.controls.getFlaps());
-		}
+		ac.motors.getByType(MotorType::flapLeft)->setPowerF(ac.remoteData.controls.getFlaps());
+		ac.motors.getByType(MotorType::flapRight)->setPowerF(ac.remoteData.controls.getFlaps());
 
 		// Camera
 		{
-			const auto cameraPitchMotor = ac.motors.getByType(MotorType::cameraPitch);
-			const auto cameraYawMotor = ac.motors.getByType(MotorType::cameraYaw);
-
-			if (!cameraPitchMotor || !cameraYawMotor)
-				return;
-
-			const auto setPower = [](Motor* motor, const int16_t angleDeg) {
-				motor->setPower(
+			const auto setPower = [&ac](MotorType motorType, const int16_t angleDeg) {
+				ac.motors.getByType(motorType)->setPower(
 					(static_cast<int32_t>(angleDeg) - config::camera::servoMinDeg)
 					* static_cast<int32_t>(MotorSettings::powerMax)
 					/ static_cast<int32_t>(config::camera::servoAngularRangeDeg)
@@ -473,8 +455,8 @@ namespace pizda {
 
 			// ESP_LOGI("cam", "pitch: %d, yaw: %d", ac.aircraftData.camera.pitchDeg, ac.aircraftData.camera.yawDeg);
 
-			setPower(cameraPitchMotor, ac.aircraftData.camera.getPitchDeg());
-			setPower(cameraYawMotor, ac.aircraftData.camera.getYawDeg());
+			setPower(MotorType::cameraPitch, ac.aircraftData.camera.getPitchDeg());
+			setPower(MotorType::cameraYaw, ac.aircraftData.camera.getYawDeg());
 		}
 	}
 

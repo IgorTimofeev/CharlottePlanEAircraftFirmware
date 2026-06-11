@@ -139,7 +139,7 @@ namespace pizda {
 	void IMU::setAccelBias(const Vector3F& value) {
 		_accelBias = value;
 
-		ESP_LOGI(_logTag, "acc bias: %f x %f x %f", _accelBias.getX(), _accelBias.getY(), _accelBias.getZ());
+		// ESP_LOGI(_logTag, "acc bias: %f x %f x %f", _accelBias.getX(), _accelBias.getY(), _accelBias.getZ());
 	}
 
 	const Vector3F& IMU::getGyroBias() const {
@@ -149,7 +149,7 @@ namespace pizda {
 	void IMU::setGyroBias(const Vector3F& value) {
 		_gyroBias = value;
 
-		ESP_LOGI(_logTag, "gyro bias: %f x %f x %f", _gyroBias.getX(), _gyroBias.getY(), _gyroBias.getZ());
+		// ESP_LOGI(_logTag, "gyro bias: %f x %f x %f", _gyroBias.getX(), _gyroBias.getY(), _gyroBias.getZ());
 	}
 
 	const Vector3F& IMU::getMagBias() const {
@@ -159,7 +159,7 @@ namespace pizda {
 	void IMU::setMagBias(const Vector3F& value) {
 		_magBias = value;
 
-		ESP_LOGI(_logTag, "mag bias: %f x %f x %f", _magBias.getX(), _magBias.getY(), _magBias.getZ());
+		// ESP_LOGI(_logTag, "mag bias: %f x %f x %f", _magBias.getX(), _magBias.getY(), _magBias.getZ());
 	}
 
 	void IMU::magTick() {

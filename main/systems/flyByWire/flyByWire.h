@@ -16,6 +16,7 @@ namespace pizda {
 			
 			float getTargetRollRad() const;
 			float getTargetPitchRad() const;
+			float getThrottleFactor() const;
 
 			AutopilotLateralMode getLateralMode() const;
 			void setLateralMode(const AutopilotLateralMode value);
@@ -64,6 +65,7 @@ namespace pizda {
 			float _aileronsFactor = 0.5f;
 			float _elevatorFactor = 0.5f;
 			float _rudderFactor = 0.5f;
+			float _noseWheelFactor = 0.5f;
 
 			static float predictValue(float valueDelta, float deltaTimeS, float dueTimeS);
 			

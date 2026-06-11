@@ -765,14 +765,15 @@ namespace pizda {
 				break;
 			}
 			case AircraftPacketType::ATierTelemetry: {
-				auto& ac = Aircraft::getInstance();
+				const auto& ac = Aircraft::getInstance();
 
 				// -------------------------------- Throttle --------------------------------
 
 				stream.writeUint8(
-					static_cast<uint32_t>(ac.motors.getByType(MotorType::throttle)->getRawPower())
-						* ((1 << AircraftATierTelemetryPacket::throttleLengthBits) - 1)
-						/ MotorSettings::powerMax,
+					static_cast<uint32_t>(
+						ac.fbw.getThrottleFactor()
+						* static_cast<float>((1 << AircraftATierTelemetryPacket::throttleLengthBits) - 1)
+					),
 					AircraftATierTelemetryPacket::throttleLengthBits
 				);
 
