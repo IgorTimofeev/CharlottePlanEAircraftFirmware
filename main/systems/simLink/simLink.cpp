@@ -18,7 +18,7 @@ namespace pizda {
 
 		ESP_ERROR_CHECK(uart_set_pin(UART_NUM_0, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
 
-		xTaskCreate(
+		xTaskCreatePinnedToCore(
 			[](void* arg) {
 				static_cast<SimLink*>(arg)->taskBody();
 			},
@@ -26,7 +26,8 @@ namespace pizda {
 			8 * 1024,
 			this,
 			10,
-			nullptr
+			nullptr,
+			0
 		);
 	}
 	

@@ -28,6 +28,7 @@ namespace pizda {
 			if (receive(1'000'000)) {
 				_receiveMode = false;
 
+				// Delay before transmission
 				_transmitTimeUs = esp_timer_get_time() + 8'000;
 			}
 		}

@@ -36,7 +36,7 @@ namespace pizda {
 			}
 		}
 
-		xTaskCreate(
+		xTaskCreatePinnedToCore(
 			[](void* arg) {
 				static_cast<Motors*>(arg)->onStart();
 			},
@@ -44,7 +44,8 @@ namespace pizda {
 			4 * 1024,
 			this,
 			20,
-			nullptr
+			nullptr,
+			0
 		);
 	}
 

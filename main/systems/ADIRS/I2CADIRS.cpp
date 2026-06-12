@@ -17,7 +17,7 @@ namespace pizda {
 		// Updating IMU biases from settings
 		for (size_t ADIRUIndex = 0; ADIRUIndex < config::ADIRS::unitCount; ++ADIRUIndex) {
 			auto& IMU = _IMUs[ADIRUIndex].unit;
-			auto& settingsUnit = ac.settings.adirs.units[ADIRUIndex];
+			const auto& settingsUnit = ac.settings.adirs.units[ADIRUIndex];
 
 			IMU.setAccelBias(settingsUnit.accelBias);
 			IMU.setGyroBias(settingsUnit.gyroBias);

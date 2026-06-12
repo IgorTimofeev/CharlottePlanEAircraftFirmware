@@ -15,7 +15,7 @@
 
 namespace pizda {
 	void FlyByWire::setup() {
-		xTaskCreate(
+		xTaskCreatePinnedToCore(
 			[](void* arg) {
 				static_cast<FlyByWire*>(arg)->onStart();
 			},
@@ -23,7 +23,8 @@ namespace pizda {
 			4 * 1024,
 			this,
 			20,
-			nullptr
+			nullptr,
+			0
 		);
 	}
 

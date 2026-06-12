@@ -7,7 +7,7 @@
 
 namespace pizda {
 	void Lights::setup() {
-		xTaskCreate(
+		xTaskCreatePinnedToCore(
 			[](void* arg) {
 				static_cast<Lights*>(arg)->onStart();
 			},
@@ -15,7 +15,8 @@ namespace pizda {
 			4096,
 			this,
 			tskIDLE_PRIORITY,
-			&taskHandle
+			&taskHandle,
+			0
 		);
 	}
 
@@ -150,14 +151,10 @@ namespace pizda {
 			gpio_config(&g);
 		}
 
-		//             0       500       1000 ms
-		//             +--------+---------+
-		// Left wing:  WRWRRRRRRRRRRRRRRRRR
-		// Right wing: WGWGGGGGGGGGGGGGGGGG
-		// Tail:       DDDDWDDDDDDDDDDDDDDD
-
 		while (true) {
 			if (_emergency) {
+				constexpr static uint16_t stageDurationMs = 250;
+
 				// Left wing
 				_leftWing.fill(0xFF, 0x00, 0x00);
 				_leftWing.flush();
@@ -173,7 +170,7 @@ namespace pizda {
 				// Cabin
 				setCabin(true);
 
-				if (delay(500))
+				if (delay(stageDurationMs))
 					continue;
 				
 				// Left wing
@@ -191,59 +188,79 @@ namespace pizda {
 				// Cabin
 				setCabin(false);
 				
-				if (delay(500))
+				if (delay(stageDurationMs))
 					continue;
 			}
 			else {
+				// Stages:     12345 ---------------
+				// Left wing:  WRWRR RRRRRRRRRRRRRRR
+				// Right wing: WGWGG GGGGGGGGGGGGGGG
+				// Tail:       DDDDW DDDDDDDDDDDDDDD
+
+				constexpr static uint8_t stageDurationMs = 40;
+				constexpr static uint16_t totalDurationMs = 1000;
+
+				// -------------------------------- Stage 1 --------------------------------
+
 				// Cabin
 				setCabin(ac.settings.lights.getCabin());
-				
+
 				// Left wing (strobe 1 or red)
 				updateWingStrobe(_leftWing, 0xFF, 0x00, 0x00);
-				
+
 				// Right wing (strobe 1 or green)
 				updateWingStrobe(_rightWing, 0x00, 0xFF, 0x00);
 
 				// Tail (dimmed)
 				updateTailStrobe(false);
 
-				if (delay(50))
+				if (delay(stageDurationMs))
 					continue;
+
+				// -------------------------------- Stage 2 --------------------------------
 
 				// Left wing (red)
 				updateNavOrLanding(_leftWing, 0xFF, 0x00, 0x00);
 
 				// Right wing (green)
 				updateNavOrLanding(_rightWing, 0x00, 0xFF, 0x00);
-				
-				if (delay(50))
+
+				if (delay(stageDurationMs))
 					continue;
+
+				// -------------------------------- Stage 3 --------------------------------
 
 				// Left wing (strobe 2 or red)
 				updateWingStrobe(_leftWing, 0xFF, 0x00, 0x00);
-				
+
 				// Right wing (strobe 2 or green)
 				updateWingStrobe(_rightWing, 0x00, 0xFF, 0x00);
-				
-				if (delay(50 * 2))
+
+				if (delay(stageDurationMs * 2))
 					continue;
+
+				// -------------------------------- Stage 4 --------------------------------
 
 				// Left wing (red)
 				updateNavOrLanding(_leftWing, 0xFF, 0x00, 0x00);
-				
+
 				// Right wing (green)
 				updateNavOrLanding(_rightWing, 0x00, 0xFF, 0x00);
-				
+
 				// Tail (strobe)
 				updateTailStrobe(true);
 
-				if (delay(50))
+				// Delay 5
+				if (delay(stageDurationMs))
 					continue;
+
+				// -------------------------------- Stage 5 --------------------------------
 
 				// Tail (dimmed)
 				updateTailStrobe(false);
 
-				delay(50 * 15);
+				// 5 delays (not stages, DELAYS) so far, subtracting them from total time & delaying for what remains
+				delay(totalDurationMs - stageDurationMs * 5);
 			}
 		}
 	}

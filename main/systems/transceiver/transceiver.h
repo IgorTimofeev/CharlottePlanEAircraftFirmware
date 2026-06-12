@@ -268,8 +268,8 @@ namespace pizda {
 			uint8_t _SXBuffer[_SXBufferLength] {};
 
 			static void logSXError(const char* key, const SX1262::error error) {
-				if (error == SX1262::error::timeout)
-					return;
+				// if (error == SX1262::error::timeout)
+				// 	return;
 
 				constexpr static uint8_t errorBufferLength = 255;
 				char errorBuffer[errorBufferLength];

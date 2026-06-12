@@ -10,7 +10,7 @@
 
 namespace pizda {
 	void ADIRS::setup() {
-		xTaskCreate(
+		xTaskCreatePinnedToCore(
 			[](void* arg) {
 				static_cast<ADIRS*>(arg)->onStart();
 			},
@@ -18,7 +18,8 @@ namespace pizda {
 			4 * 1024,
 			this,
 			10,
-			nullptr
+			nullptr,
+			0
 		);
 	}
 

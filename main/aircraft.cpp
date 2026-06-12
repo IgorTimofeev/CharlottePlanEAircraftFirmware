@@ -22,8 +22,7 @@ namespace pizda {
 			bus.glitch_ignore_cnt = 7;
 			bus.flags.enable_internal_pullup = true;
 
-			const auto state = i2c_new_master_bus(&bus, &I2CMasterBusHandle);
-			ESP_ERROR_CHECK_WITHOUT_ABORT(state);
+			ESP_ERROR_CHECK(i2c_new_master_bus(&bus, &I2CMasterBusHandle));
 		}
 
 		// SPI
@@ -35,6 +34,7 @@ namespace pizda {
 			busConfig.quadwp_io_num = -1;
 			busConfig.quadhd_io_num = -1;
 			busConfig.max_transfer_sz = 512;
+
 			ESP_ERROR_CHECK(spi_bus_initialize(config::SPI::device, &busConfig, SPI_DMA_CH_AUTO));
 		}
 
@@ -44,13 +44,14 @@ namespace pizda {
 			unitConfig.unit_id = ADC_UNIT_2;
 			unitConfig.clk_src = ADC_RTC_CLK_SRC_DEFAULT;
 			unitConfig.ulp_mode = ADC_ULP_MODE_DISABLE;
+
 			ESP_ERROR_CHECK(adc_oneshot_new_unit(&unitConfig, &_ADCOneshotUnit2));
 		}
 
 		// Settings come first because they contain XCVR modulation params, motor configurations, etc.
 		settings.setup();
 
-		// Transceiver, motors and FBW should be initialized ASAP for ESC calibration possibility
+		// Transceiver, motors and FBW should be initialized ASAP if we want to perform ESC calibration via thrust levers
 		if (!transceiver.setup())
 			startErrorLoop("XCVR setup failed");
 
@@ -60,18 +61,7 @@ namespace pizda {
 		// Everything else can be safely delayed
 		lights.setup();
 		battery.setup();
-
-		xTaskCreate(
-			[](void* arg) {
-				static_cast<Aircraft*>(arg)->adirs.setup();
-				vTaskDelete(nullptr);
-			},
-			"AsyncSetup",
-			4 * 1024,
-			this,
-			10,
-			nullptr
-		);
+		adirs.setup();
 
 		#ifdef SIM
 			simLink.setup();

@@ -267,7 +267,7 @@ namespace pizda {
 			// Computing integrated velocity
 			// accelerationMPS = accelerationG * ~9.8
 			// velocityMPS = accelerationMPS * deltaTime
-			_integratedVelocityMPS += (-tiltCompensatedAccelData.getY()) * Units::earthGMPS2 * FIFOSampleIntervalS;
+			_integratedVelocityMPS += -tiltCompensatedAccelData.getY() * Units::earthGMPS2 * FIFOSampleIntervalS;
 
 			// -------------------------------- Position --------------------------------
 
