@@ -33,13 +33,14 @@ namespace pizda {
 			}
 		}
 		else {
-			if (esp_timer_get_time() >= _transmitTimeUs) {
-				transmit(1'000'000);
-
-				_receiveMode = true;
+			if (esp_timer_get_time() < _transmitTimeUs) {
+				// taskYIELD();
+				// asm volatile("nop");
 			}
 			else {
-				taskYIELD();
+				transmit();
+
+				_receiveMode = true;
 			}
 		}
 	}
@@ -323,9 +324,9 @@ namespace pizda {
 					return false;
 
 				_receivedCommunicationSettings.frequencyHz = stream.readUint16(RemoteSystemCommunicationSettingsPacket::RFFrequencyLengthBits) * 1'000'000;
-				_receivedCommunicationSettings.bandwidth = static_cast<SX1262::LoRaBandwidth>(stream.readUint8(RemoteSystemCommunicationSettingsPacket::bandwidthLengthBits));
+				_receivedCommunicationSettings.bandwidth = static_cast<SX1262LoRaBandwidth>(stream.readUint8(RemoteSystemCommunicationSettingsPacket::bandwidthLengthBits));
 				_receivedCommunicationSettings.spreadingFactor = stream.readUint8(RemoteSystemCommunicationSettingsPacket::spreadingFactorLengthBits);
-				_receivedCommunicationSettings.codingRate = static_cast<SX1262::LoRaCodingRate>(stream.readUint8(RemoteSystemCommunicationSettingsPacket::codingRateLengthBits));
+				_receivedCommunicationSettings.codingRate = static_cast<SX1262LoRaCodingRate>(stream.readUint8(RemoteSystemCommunicationSettingsPacket::codingRateLengthBits));
 				_receivedCommunicationSettings.syncWord = stream.readUint8(RemoteSystemCommunicationSettingsPacket::syncWordLengthBits);
 				_receivedCommunicationSettings.preambleLength = stream.readUint16(RemoteSystemCommunicationSettingsPacket::preambleLengthLengthBits);
 

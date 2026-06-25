@@ -6,6 +6,8 @@
 #include <SX1262.h>
 
 namespace pizda {
+	using namespace YOBA;
+
 	enum class ConnectionState : uint8_t {
 		initial,
 		connected,
@@ -58,12 +60,12 @@ namespace pizda {
 			constexpr static uint16_t powerMax = (1 << powerResolutionBits) - 1;
 
 			constexpr static uint8_t dutyFrequencyHz = 50;
-			constexpr static uint16_t dutyCycleDurationUs = 1'000'000 / dutyFrequencyHz;
+			constexpr static uint16_t dutyDurationUs = 1'000'000 / dutyFrequencyHz;
 			constexpr static uint8_t dutyResolutionBits = 12;
 			constexpr static uint16_t dutyMax = (1 << dutyResolutionBits) - 1;
 
 			constexpr static uint16_t pulseWidthUsToDuty(const uint16_t pulseWidthUs) {
-				return static_cast<uint32_t>(pulseWidthUs) * dutyMax / dutyCycleDurationUs;
+				return (static_cast<uint32_t>(pulseWidthUs) * dutyMax + dutyDurationUs / 2) / dutyDurationUs;
 			}
 
 			uint16_t min = 1000;
@@ -82,9 +84,9 @@ namespace pizda {
 	class TransceiverCommunicationSettings {
 		public:
 			uint32_t frequencyHz = 0;
-			SX1262::LoRaBandwidth bandwidth = SX1262::LoRaBandwidth::bw500_0;
+			SX1262LoRaBandwidth bandwidth = SX1262LoRaBandwidth::bw500_0;
 			uint8_t spreadingFactor = 0;
-			SX1262::LoRaCodingRate codingRate = SX1262::LoRaCodingRate::cr4_5;
+			SX1262LoRaCodingRate codingRate = SX1262LoRaCodingRate::cr4_5;
 			uint8_t syncWord = 0;
 			uint16_t preambleLength = 0;
 

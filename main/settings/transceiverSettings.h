@@ -20,9 +20,9 @@ namespace pizda {
 
 			void onRead(const NVSStream& stream) override {
 				communication.frequencyHz = stream.readUint32(_communicationRFFrequencyHz, config::XCVR::communicationSettings.frequencyHz);
-				communication.bandwidth = static_cast<SX1262::LoRaBandwidth>(stream.readUint8(_communicationBandwidth, static_cast<uint8_t>(config::XCVR::communicationSettings.bandwidth)));
+				communication.bandwidth = static_cast<SX1262LoRaBandwidth>(stream.readUint8(_communicationBandwidth, static_cast<uint8_t>(config::XCVR::communicationSettings.bandwidth)));
 				communication.spreadingFactor = stream.readUint8(_communicationSpreadingFactor, config::XCVR::communicationSettings.spreadingFactor);
-				communication.codingRate = static_cast<SX1262::LoRaCodingRate>(stream.readUint8(_communicationCodingRate, static_cast<uint8_t>(config::XCVR::communicationSettings.codingRate)));
+				communication.codingRate = static_cast<SX1262LoRaCodingRate>(stream.readUint8(_communicationCodingRate, static_cast<uint8_t>(config::XCVR::communicationSettings.codingRate)));
 				communication.syncWord = stream.readUint8(_communicationSyncWord, config::XCVR::communicationSettings.syncWord);
 				communication.preambleLength = stream.readUint16(_communicationPreambleLength, config::XCVR::communicationSettings.preambleLength);
 

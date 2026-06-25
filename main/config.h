@@ -115,9 +115,9 @@ namespace pizda {
 					// Default values, can be changed and stored in NVS
 					constexpr static TransceiverCommunicationSettings communicationSettings {
 						915'000'000,
-						SX1262::LoRaBandwidth::bw500_0,
+						SX1262LoRaBandwidth::bw500_0,
 						7,
-						SX1262::LoRaCodingRate::cr4_5,
+						SX1262LoRaCodingRate::cr4_5,
 						0x34,
 						8,
 
