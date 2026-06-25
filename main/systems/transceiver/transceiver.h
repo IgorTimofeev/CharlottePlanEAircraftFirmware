@@ -100,7 +100,7 @@ namespace pizda {
 					"XCVR",
 					8 * 1024,
 					this,
-					20,
+					CPUCoreID == 0 ? 20 : configMAX_PRIORITIES - 1,
 					nullptr,
 					CPUCoreID
 				);
@@ -271,14 +271,8 @@ namespace pizda {
 				// if (error == SX1262Error::timeout)
 				// 	return;
 
-				constexpr static uint8_t errorBufferLength = 255;
-				char errorBuffer[errorBufferLength];
-
-				SX1262::errorToString(error, { errorBuffer, errorBufferLength });
-
-				ESP_LOGE(_logTag, "%s: %s", key, errorBuffer);
+				ESP_LOGE(_logTag, "%s: %s", key, SX1262::errorToString(error));
 			}
-
 
 		// ----------------------------- Connection state -----------------------------
 

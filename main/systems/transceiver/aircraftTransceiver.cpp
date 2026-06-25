@@ -29,12 +29,12 @@ namespace pizda {
 				_receiveMode = false;
 
 				// Delay before transmission
-				_transmitTimeUs = esp_timer_get_time() + 8'000;
+				_transmitTimeUs = esp_timer_get_time() + 6'000;
 			}
 		}
 		else {
 			if (esp_timer_get_time() < _transmitTimeUs) {
-				// taskYIELD();
+				taskYIELD();
 				// asm volatile("nop");
 			}
 			else {
