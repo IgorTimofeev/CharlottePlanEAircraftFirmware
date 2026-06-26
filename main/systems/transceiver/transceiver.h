@@ -15,6 +15,7 @@
 #include <bitStream.h>
 #include <circularQueue.h>
 
+#include "config.h"
 #include "utilities/math.h"
 
 #include "config.h"
@@ -111,11 +112,11 @@ namespace pizda {
 			[[noreturn]] void onStart() {
 				while (true) {
 					// Communication settings sync requested
-					if (_communicationSettingsACKTime < 0) {
+					if (_communicationSettingsCheckTime < 0) {
 						scheduleCommunicationSettingsSyncCheck();
 					}
 					// Communication settings sync check time reached
-					else if (_communicationSettingsACKTime > 0 && esp_timer_get_time() >= _communicationSettingsACKTime) {
+					else if (_communicationSettingsCheckTime > 0 && esp_timer_get_time() >= _communicationSettingsCheckTime) {
 						performCommunicationSettingsSyncCheck();
 					}
 
@@ -123,14 +124,14 @@ namespace pizda {
 					onTick();
 
 					// Computing PPS
-					if (esp_timer_get_time() >= _PPSTime) {
-						_RXPPS = _RXPPSTemp;
-						_TXPPS = _TXPPSTemp;
+					if (esp_timer_get_time() >= _packetRateUpdateTime) {
+						_packetRateRX = _packetRateRXNext;
+						_packetRateTX = _packetRateTXNext;
 
-						_RXPPSTemp = 0;
-						_TXPPSTemp = 0;
+						_packetRateRXNext = 0;
+						_packetRateTXNext = 0;
 
-						_PPSTime = esp_timer_get_time() + 1'000'000;
+						_packetRateUpdateTime = esp_timer_get_time() + 1'000'000;
 					}
 				}
 			}
@@ -173,7 +174,7 @@ namespace pizda {
 									break;
 							}
 
-							_RXPPSTemp++;
+							_packetRateRXNext++;
 
 							return true;
 						}
@@ -230,7 +231,7 @@ namespace pizda {
 					return false;
 				}
 
-				_TXPPSTemp++;
+				_packetRateTXNext++;
 
 				return true;
 			}
@@ -298,6 +299,9 @@ namespace pizda {
 		// ----------------------------- Communication settings -----------------------------
 
 		protected:
+			int32_t _receivingTimeOffsetUs = config::XCVR::communicationSettings.receivingTimeOffsetUs;
+			int32_t _transmittingTimeOffsetUs = config::XCVR::communicationSettings.transmittingTimeOffsetUs;
+
 			virtual void onCommunicationSettingsSyncCheckScheduled() = 0;
 			virtual void onCommunicationSettingsSyncCheckCompleted() = 0;
 
@@ -311,6 +315,9 @@ namespace pizda {
 			}
 
 			bool setCommunicationSettings(const TransceiverCommunicationSettings& settings) {
+				_receivingTimeOffsetUs = settings.receivingTimeOffsetUs;
+				_transmittingTimeOffsetUs = settings.transmittingTimeOffsetUs;
+
 				if (!checkSXErrorOnSetCommunicationSettings(
 					_SX.setStandby()
 				))
@@ -360,58 +367,57 @@ namespace pizda {
 			}
 
 			void requestCommunicationSettingsSyncCheck() {
-				_communicationSettingsACKTime = -1;
+				_communicationSettingsCheckTime = -1;
 			}
 
 		private:
-			constexpr static uint8_t _communicationSettingsACKMinValidPPS = 5;
-			constexpr static uint32_t _communicationSettingsACKDelayUs = 2'000'000;
-			int64_t _communicationSettingsACKTime = 0;
+			constexpr static uint8_t _communicationSettingsCheckMinPacketRate = 10;
+			constexpr static uint32_t _communicationSettingsCheckDelayUs = 2'000'000;
+			int64_t _communicationSettingsCheckTime = 0;
 
 			void scheduleCommunicationSettingsSyncCheck() {
 				onCommunicationSettingsSyncCheckScheduled();
 
-				_communicationSettingsACKTime = esp_timer_get_time() + _communicationSettingsACKDelayUs;
+				_communicationSettingsCheckTime = esp_timer_get_time() + _communicationSettingsCheckDelayUs;
 			}
 
 			void performCommunicationSettingsSyncCheck() {
 				// Received and decoded enough packets to consider the connection is stable
-				if (getRXPPS() >= _communicationSettingsACKMinValidPPS) {
+				if (getRXPacketRate() >= _communicationSettingsCheckMinPacketRate) {
 					ESP_LOGI(_logTag, "communication settings synchronized");
 
 					onCommunicationSettingsSyncCheckCompleted();
 
-					_communicationSettingsACKTime = esp_timer_get_time() + _communicationSettingsACKDelayUs;
+					_communicationSettingsCheckTime = esp_timer_get_time() + _communicationSettingsCheckDelayUs;
 				}
 				// Or not enough...
 				else {
-					ESP_LOGI(_logTag, "communication settings change timed out with PPS = %d, falling back to default", getRXPPS());
+					ESP_LOGI(_logTag, "communication settings change timed out with PPS = %d, falling back to default", getRXPacketRate());
 
 					// Falling back to default communication settings
 					setCommunicationSettings(config::XCVR::communicationSettings);
 				}
 
-				_communicationSettingsACKTime = 0;
+				_communicationSettingsCheckTime = 0;
 			}
 
 		// ----------------------------- PPS -----------------------------
 
 		public:
-			uint16_t getRXPPS() const {
-				return _RXPPS;
+			uint16_t getRXPacketRate() const {
+				return _packetRateRX;
 			}
 
-			uint16_t getTXPPS() const {
-				return _TXPPS;
+			uint16_t getTXPacketRate() const {
+				return _packetRateTX;
 			}
 
 		private:
-			int64_t _PPSTime = 0;
-			uint16_t _RXPPSTemp = 0;
-			uint16_t _TXPPSTemp = 0;
-			uint16_t _RXPPS = 0;
-			uint16_t _TXPPS = 0;
-
+			int64_t _packetRateUpdateTime = 0;
+			uint16_t _packetRateRXNext = 0;
+			uint16_t _packetRateTXNext = 0;
+			uint16_t _packetRateRX = 0;
+			uint16_t _packetRateTX = 0;
 
 		// ----------------------------- Packet queue -----------------------------
 

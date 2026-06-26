@@ -149,6 +149,10 @@ namespace pizda {
 
 			constexpr static uint8_t currentLimitMALengthBits = 8;
 			constexpr static uint8_t powerDBmLengthBits = 8;
+
+			// 20 bit = 1 048 575, one second
+			constexpr static uint8_t receivingTimeOffsetLengthBits = 20;
+			constexpr static uint8_t transmittingTimeOffsetLengthBits = receivingTimeOffsetLengthBits;
 	};
 
 	class RemoteSystemPIDPacket {

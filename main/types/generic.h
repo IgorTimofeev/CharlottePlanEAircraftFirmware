@@ -93,6 +93,9 @@ namespace pizda {
 			uint8_t currentLimitMA = 0;
 			int8_t powerDBm = 0;
 
+			int32_t receivingTimeOffsetUs = 0;
+			int32_t transmittingTimeOffsetUs = 0;
+
 			void sanitize() {
 				frequencyHz = std::clamp<uint32_t>(frequencyHz, 120'000'000, 960'000'000);
 				spreadingFactor = std::clamp<uint8_t>(spreadingFactor, 5, 12);

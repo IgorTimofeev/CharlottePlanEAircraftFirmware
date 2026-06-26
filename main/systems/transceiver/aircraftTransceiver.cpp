@@ -29,7 +29,7 @@ namespace pizda {
 				_receiveMode = false;
 
 				// Delay before transmission
-				_transmitTimeUs = esp_timer_get_time() + 6'000;
+				_transmitTimeUs = esp_timer_get_time() + _transmittingTimeOffsetUs;
 			}
 		}
 		else {
@@ -83,9 +83,9 @@ namespace pizda {
 			}
 		}
 	}
-	
+
 	// -------------------------------- Receiving --------------------------------
-	
+
 	bool AircraftTransceiver::onReceive(BitStream& stream, const RemotePacketType packetType, const uint8_t payloadLength) {
 		switch (packetType) {
 			case RemotePacketType::controls: {
@@ -318,7 +318,10 @@ namespace pizda {
 						+ RemoteSystemCommunicationSettingsPacket::preambleLengthLengthBits
 
 						+ RemoteSystemCommunicationSettingsPacket::currentLimitMALengthBits
-						+ RemoteSystemCommunicationSettingsPacket::powerDBmLengthBits,
+						+ RemoteSystemCommunicationSettingsPacket::powerDBmLengthBits
+
+						+ RemoteSystemCommunicationSettingsPacket::receivingTimeOffsetLengthBits
+						+ RemoteSystemCommunicationSettingsPacket::transmittingTimeOffsetLengthBits,
 					payloadLength
 				))
 					return false;
@@ -333,6 +336,9 @@ namespace pizda {
 				_receivedCommunicationSettings.currentLimitMA = stream.readInt8(RemoteSystemCommunicationSettingsPacket::currentLimitMALengthBits);
 				_receivedCommunicationSettings.powerDBm = stream.readInt8(RemoteSystemCommunicationSettingsPacket::powerDBmLengthBits);
 
+				_receivedCommunicationSettings.receivingTimeOffsetUs = stream.readInt32(RemoteSystemCommunicationSettingsPacket::receivingTimeOffsetLengthBits);
+				_receivedCommunicationSettings.transmittingTimeOffsetUs = stream.readInt32(RemoteSystemCommunicationSettingsPacket::transmittingTimeOffsetLengthBits);
+
 				_receivedCommunicationSettings.sanitize();
 
 				ESP_LOGI(_logTag, "received communication settings");
@@ -345,6 +351,9 @@ namespace pizda {
 
 				ESP_LOGI(_logTag, "currentLimitMA: %d", _receivedCommunicationSettings.currentLimitMA);
 				ESP_LOGI(_logTag, "powerDBm: %d", _receivedCommunicationSettings.powerDBm);
+
+				ESP_LOGI(_logTag, "receivingTimeOffsetUs: %d", _receivedCommunicationSettings.receivingTimeOffsetUs);
+				ESP_LOGI(_logTag, "transmittingTimeOffsetUs: %d", _receivedCommunicationSettings.transmittingTimeOffsetUs);
 
 				enqueueSystemPacket(AircraftSystemPacketType::communicationSettingsACK);
 
@@ -714,9 +723,9 @@ namespace pizda {
 			}
 		}
 	}
-	
+
 	// -------------------------------- Transmitting --------------------------------
-	
+
 	void AircraftTransceiver::onTransmit(BitStream& stream, const AircraftPacketType packetType) {
 		switch (packetType) {
 			case AircraftPacketType::STierTelemetry: {
@@ -829,7 +838,7 @@ namespace pizda {
 			case AircraftPacketType::system:
 				transmitAircraftSystemPacket(stream);
 				break;
-			
+
 			default:
 				ESP_LOGE(_logTag, "failed to transmit packet: unsupported type %d", packetType);
 				break;
