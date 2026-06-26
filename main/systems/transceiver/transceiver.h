@@ -416,20 +416,7 @@ namespace pizda {
 		// ----------------------------- Packet queue -----------------------------
 
 		protected:
-			TLocalSystemPacketType getEnqueuedSystemPacketType() const {
-				return _packetQueueSystemType;
-			}
-
-		private:
-			std::array<PacketSequenceItem<TLocalPacketType>, TLocalPacketSequenceLength> _packetSequence;
-
-			uint8_t _packetSequenceIndex = 0;
-
-			CircularQueue<TLocalSystemPacketType, 255> _packetQueue {};
-			SemaphoreHandle_t _packetQueueMutex;
-			TLocalSystemPacketType _packetQueueSystemType {};
-
-			TLocalPacketType getTransmitPacketType() {
+			virtual TLocalPacketType getTransmitPacketType() {
 				const auto& item = _packetSequence[_packetSequenceIndex];
 
 				const auto nextSequenceItem = [this] {
@@ -460,6 +447,21 @@ namespace pizda {
 
 				return packetType;
 			}
+
+			virtual TLocalSystemPacketType getTransmitSystemPacketType() {
+				return _packetQueueSystemType;
+			}
+
+		private:
+			std::array<PacketSequenceItem<TLocalPacketType>, TLocalPacketSequenceLength> _packetSequence;
+
+			uint8_t _packetSequenceIndex = 0;
+
+			CircularQueue<TLocalSystemPacketType, 255> _packetQueue {};
+			SemaphoreHandle_t _packetQueueMutex;
+			TLocalSystemPacketType _packetQueueSystemType {};
+
+
 
 		// ----------------------------- Validation -----------------------------
 

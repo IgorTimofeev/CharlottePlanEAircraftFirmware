@@ -124,7 +124,7 @@ namespace pizda {
 	}
 
 	bool AircraftTransceiver::receiveRemoteSystemPacket(BitStream& stream, const uint8_t payloadLength) {
-		const auto type = static_cast<RemoteSystemPacketType>(stream.readUint8(RemoteSystemPacket::typeLengthBits));
+		const auto remoteSystemPacketType = static_cast<RemoteSystemPacketType>(stream.readUint8(RemoteSystemPacket::typeLengthBits));
 
 		const auto readPID = [&stream, payloadLength](PIDCoefficients& coefficients) {
 			if (!validatePayloadChecksumAndLength(
@@ -145,7 +145,7 @@ namespace pizda {
 			return true;
 		};
 
-		switch (type) {
+		switch (remoteSystemPacketType) {
 			case RemoteSystemPacketType::trim: {
 				if (!validatePayloadChecksumAndLength(
 					stream,
@@ -708,7 +708,7 @@ namespace pizda {
 			}
 
 			default: {
-				ESP_LOGE(_logTag, "failed to receive packet: unsupported type %d", std::to_underlying(type));
+				ESP_LOGE(_logTag, "failed to receive packet: unsupported remove system type %d", std::to_underlying(remoteSystemPacketType));
 
 				return false;
 			}
@@ -831,15 +831,17 @@ namespace pizda {
 				break;
 			
 			default:
-				ESP_LOGE(_logTag, "failed to write packet: unsupported type %d", packetType);
+				ESP_LOGE(_logTag, "failed to transmit packet: unsupported type %d", packetType);
 				break;
 		}
 	}
 
 	void AircraftTransceiver::transmitAircraftSystemPacket(BitStream& stream) {
-		stream.writeUint8(std::to_underlying(getEnqueuedSystemPacketType()), AircraftSystemPacket::typeLengthBits);
+		const auto systemPacketType = getTransmitSystemPacketType();
 
-		switch (getEnqueuedSystemPacketType()) {
+		stream.writeUint8(std::to_underlying(systemPacketType), AircraftSystemPacket::typeLengthBits);
+
+		switch (systemPacketType) {
 			case AircraftSystemPacketType::calibration: {
 				const auto& ac = Aircraft::getInstance();
 
@@ -853,8 +855,11 @@ namespace pizda {
 
 				break;
 			}
-			default:
+			default: {
+				ESP_LOGE(_logTag, "failed to transmit packet: unsupported system type %d", std::to_underlying(systemPacketType));
+
 				break;
+			}
 		}
 	}
 }
