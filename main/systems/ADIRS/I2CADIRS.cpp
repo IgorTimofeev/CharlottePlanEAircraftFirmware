@@ -3,6 +3,8 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
+#include <esp_timer.h>
+
 #include "utilities/math.h"
 #include "aircraft.h"
 #include "config.h"
@@ -11,21 +13,38 @@ namespace pizda {
 	void I2CADIRS::setup() {
 		const auto& ac = Aircraft::getInstance();
 
-		if (!setupIMUs())
-			return;
+		// IMU
+		{
+			_IMU.hal.setup(ac.I2CMasterBusHandle, _IMU.address, 400'000);
 
-		// Updating IMU biases from settings
-		for (size_t ADIRUIndex = 0; ADIRUIndex < config::ADIRS::unitCount; ++ADIRUIndex) {
-			auto& IMU = _IMUs[ADIRUIndex].unit;
-			const auto& settingsUnit = ac.settings.adirs.units[ADIRUIndex];
+			if (!_IMU.unit.setup(&_IMU.hal)) {
+				ESP_LOGE(_logTag, "IMU initialization failed");
+				return;
+			}
 
-			IMU.setAccelBias(settingsUnit.accelBias);
-			IMU.setGyroBias(settingsUnit.gyroBias);
-			IMU.setMagBias(settingsUnit.magBias);
+			// Updating biases from settings
+			_IMU.unit.setAccelBias(ac.settings.adirs.getAccelBias());
+			_IMU.unit.setGyroBias(ac.settings.adirs.getGyroBias());
+			_IMU.unit.setMagBias(ac.settings.adirs.getMagBias());
 		}
 
-		if (!setupBMPs())
-			return;
+		// BMP280
+		{
+			_BMP280.hal.setup(ac.I2CMasterBusHandle, _BMP280.address, 1'000'000);
+
+			if (!_BMP280.unit.setup(
+				&_BMP280.hal,
+
+				BMP280Mode::normal,
+				BMP280Oversampling::x16,
+				BMP280Oversampling::x2,
+				BMP280Filter::x4,
+				BMP280StandbyDuration::ms125
+			)) {
+				ESP_LOGI(_logTag, "BMP280 initialization failed");
+				return;
+			}
+		}
 
 		ADIRS::setup();
 	}
@@ -33,9 +52,7 @@ namespace pizda {
 	void I2CADIRS::setHomeCoordinates(const float latitude, const float longitude, const float altitude) {
 		ADIRS::setHomeCoordinates(latitude, longitude, altitude);
 
-		for (auto& IMU : _IMUs) {
-			IMU.unit.resetIntegratedCoordinates();
-		}
+		_IMU.unit.resetIntegratedCoordinates();
 	}
 
 	void I2CADIRS::onCalibrateAccelAndGyro() {
@@ -43,46 +60,48 @@ namespace pizda {
 
 		auto& ac = Aircraft::getInstance();
 
-		constexpr static uint16_t iterations = 5'000;
+		constexpr static uint16_t iterations = 1'000;
 
-		for (size_t ADIRUIndex = 0; ADIRUIndex < config::ADIRS::unitCount; ++ADIRUIndex) {
-			auto& IMU = _IMUs[ADIRUIndex].unit;
+		// Setting calibration attenuation
+		_IMU.unit.setCalibrationMode();
 
-			// Setting calibration attenuation
-			IMU.setCalibrationMode();
+		Vector3F aSum {};
+		Vector3F gSum {};
+		uint32_t XCVRPacketTime = 0;
 
-			Vector3F aSum {};
-			Vector3F gSum {};
+		for (uint16_t i = 0; i < iterations; ++i) {
+			// Accumulating samples
+			aSum += _IMU.unit.getRawAccelData();
+			gSum += _IMU.unit.getRawGyroData();
 
-			for (uint16_t i = 0; i < iterations; ++i) {
-				// Accumulating samples
-				aSum += IMU.getRawAccelData();
-				gSum += IMU.getRawGyroData();
-
-				// Reporting progress
+			// Reporting progress
+			if (esp_timer_get_time() >= XCVRPacketTime) {
 				ac.aircraftData.calibration.setProgress(static_cast<uint8_t>(static_cast<uint32_t>(i) * 0xFF / iterations));
 				ac.transceiver.enqueueSystemPacket(AircraftSystemPacketType::calibration);
 
-				vTaskDelay(pdMS_TO_TICKS(std::max(IMU::MPUSampleIntervalHz / 1000, portTICK_PERIOD_MS)));
+				XCVRPacketTime = esp_timer_get_time() + _calibrationXCVRPacketIntervalUs;
 			}
 
-			aSum /= iterations;
-			// Z axis - 1G
-			aSum.setZ(aSum.getZ() - 1);
-
-			gSum /= iterations;
-
-			auto& settingsUnit = ac.settings.adirs.units[ADIRUIndex];
-			settingsUnit.accelBias = aSum;
-			settingsUnit.gyroBias = gSum;
-			ac.settings.adirs.writeLater();
-
-			IMU.setAccelBias(settingsUnit.accelBias);
-			IMU.setGyroBias(settingsUnit.gyroBias);
-
-			// Restoring attenuation to operational
-			IMU.setOperationalMode();
+			vTaskDelay(pdMS_TO_TICKS(std::max(IMU::MPUSampleIntervalHz / 1000, portTICK_PERIOD_MS)));
 		}
+
+		aSum /= iterations;
+		// Z axis - 1G
+		aSum.setZ(aSum.getZ() - 1);
+
+		gSum /= iterations;
+
+		// Updating settings
+		ac.settings.adirs.setAccelBias(aSum);
+		ac.settings.adirs.setGyroBias(gSum);
+		ac.settings.adirs.writeLater();
+
+		// Updating unit
+		_IMU.unit.setAccelBias(aSum);
+		_IMU.unit.setGyroBias(gSum);
+
+		// Restoring attenuation to operational
+		_IMU.unit.setOperationalMode();
 
 		// Reporting progress once more
 		ac.aircraftData.calibration.setProgress(0xFF);
@@ -98,37 +117,41 @@ namespace pizda {
 
 		constexpr static uint16_t iterations = 2'000;
 
-		for (size_t ADIRUIndex = 0; ADIRUIndex < config::ADIRS::unitCount; ++ADIRUIndex) {
-			auto& IMU = _IMUs[ADIRUIndex].unit;
+		// Setting calibration attenuation
+		_IMU.unit.setCalibrationMode();
 
-			// Setting calibration attenuation
-			IMU.setCalibrationMode();
+		Vector3F min {};
+		Vector3F max {};
+		uint32_t XCVRPacketTime = 0;
 
-			Vector3F min {};
-			Vector3F max {};
+		for (uint16_t i = 0; i < iterations; ++i) {
+			const auto magData = _IMU.unit.getRawMagData();
 
-			for (uint16_t i = 0; i < iterations; ++i) {
-				const auto magData = IMU.getRawMagData();
+			min = min.min(magData);
+			max = max.max(magData);
 
-				min = min.min(magData);
-				max = max.max(magData);
-
-				// Reporting progress
+			// Reporting progress
+			if (esp_timer_get_time() >= XCVRPacketTime) {
 				ac.aircraftData.calibration.setProgress(static_cast<uint8_t>(static_cast<uint32_t>(i) * 0xFF / iterations));
 				ac.transceiver.enqueueSystemPacket(AircraftSystemPacketType::calibration);
 
-				vTaskDelay(pdMS_TO_TICKS(std::max(IMU::magTickIntervalUs / 1000, portTICK_PERIOD_MS)));
+				XCVRPacketTime = esp_timer_get_time() + _calibrationXCVRPacketIntervalUs;
 			}
 
-			auto& settingsUnit = ac.settings.adirs.units[ADIRUIndex];
-			settingsUnit.magBias = min + (max - min) / 2;
-			ac.settings.adirs.writeLater();
-
-			IMU.setMagBias(settingsUnit.magBias);
-
-			// Restoring attenuation to operational
-			IMU.setOperationalMode();
+			vTaskDelay(pdMS_TO_TICKS(std::max(IMU::magTickIntervalUs / 1000, portTICK_PERIOD_MS)));
 		}
+
+		const auto bias = min + (max - min) / 2;
+
+		// Updating settings
+		ac.settings.adirs.setMagBias(bias);
+		ac.settings.adirs.writeLater();
+
+		// Updating unit
+		_IMU.unit.setMagBias(bias);
+
+		// Restoring attenuation to operational
+		_IMU.unit.setOperationalMode();
 
 		// Reporting progress once more
 		ac.aircraftData.calibration.setProgress(0xFF);
@@ -138,117 +161,40 @@ namespace pizda {
 	}
 
 	void I2CADIRS::onTick() {
-		updateIMUs();
-		updateBMPs();
+		IMUTick();
+		BMP280Tick();
 
 		vTaskDelay(pdMS_TO_TICKS(std::max(IMU::commonTickIntervalUs / 1000, portTICK_PERIOD_MS)));
 	}
 
-	bool I2CADIRS::setupIMUs() {
-		const auto& ac = Aircraft::getInstance();
-
-		for (uint8_t i = 0; i < static_cast<uint8_t>(_IMUs.size()); ++i) {
-			auto& IMU = _IMUs[i];
-
-			IMU.hal.setup(ac.I2CMasterBusHandle, IMU.address, 400'000);
-
-			if (!IMU.unit.setup(&IMU.hal)) {
-				ESP_LOGE(_logTag, "IMU %d initialization failed", i);
-				return false;
-			}
-		}
-
-		return true;
-	}
-
-	void I2CADIRS::updateIMUs() {
-		float rollRadSum = 0;
-		float pitchRadSum = 0;
-		float yawRadSum = 0;
-		float integratedVelocityMPSSum = 0;
-		Vector3F accelerationGSum {};
-		float integratedLatitudeRadSum = 0;
-		float integratedLongitudeRadSum = 0;
-
-		for (auto& IMU : _IMUs) {
-			IMU.unit.tick();
-
-			rollRadSum += IMU.unit.getRollRad();
-			pitchRadSum += IMU.unit.getPitchRad();
-			yawRadSum += IMU.unit.getYawRad();
-
-			integratedVelocityMPSSum += IMU.unit.getIntegratedVelocityMPS();
-			accelerationGSum += IMU.unit.getAccelerationG();
-
-			integratedLatitudeRadSum += IMU.unit.getIntegratedLatitudeRad();
-			integratedLongitudeRadSum += IMU.unit.getIntegratedLongitudeRad();
-		}
+	void I2CADIRS::IMUTick() {
+		_IMU.unit.tick();
 
 		// Roll / pitch / yaw
-		setRollRad(rollRadSum / _IMUs.size());
-		setPitchRad(pitchRadSum / _IMUs.size());
-		setYawRad(yawRadSum / _IMUs.size());
+		setRollRad(_IMU.unit.getRollRad());
+		setPitchRad(_IMU.unit.getPitchRad());
+		setYawRad( _IMU.unit.getYawRad());
 		updateHeadingFromYaw();
 
 		// Velocity
-		integratedVelocityMPSSum /= _IMUs.size();
-		setAirspeedMS(std::abs(integratedVelocityMPSSum));
+		setAirspeedMS(std::abs(_IMU.unit.getIntegratedVelocityMPS()));
 
 		// ESP_LOGI("aefa","vel: %f", integratedVelocityMsSum);
 
 		// Coordinates
-		integratedLatitudeRadSum /= _IMUs.size();
-		integratedLongitudeRadSum /= _IMUs.size();
-
-		setLatitude(getHomeLatitude() + integratedLatitudeRadSum);
-		setLongitude(getHomeLongitude() + integratedLongitudeRadSum);
+		setLatitude(getHomeLatitude() + _IMU.unit.getIntegratedLatitudeRad());
+		setLongitude(getHomeLongitude() + _IMU.unit.getIntegratedLongitudeRad());
 
 		// Slip & skid
-		const auto accelerationG = accelerationGSum / _IMUs.size();
-		updateSlipAndSkidFactor(accelerationG.getX(), IMU::accelOperationalRangeG);
+		updateSlipAndSkidFactor(_IMU.unit.getAccelerationG().getX(), IMU::accelOperationalRangeG);
 	}
 
-	bool I2CADIRS::setupBMPs() {
-		const auto& ac = Aircraft::getInstance();
+	void I2CADIRS::BMP280Tick() {
+		float pressure, temperature;
+		_BMP280.unit.readPressureAndTemperature(pressure, temperature);
 
-		for (uint8_t i = 0; i < static_cast<uint8_t>(_BMPs.size()); ++i) {
-			auto& BMP = _BMPs[i];
-
-			BMP.hal.setup(ac.I2CMasterBusHandle, BMP.address, 1'000'000);
-
-			if (!BMP.unit.setup(
-				&BMP.hal,
-
-				BMP280Mode::normal,
-				BMP280Oversampling::x16,
-				BMP280Oversampling::x2,
-				BMP280Filter::x4,
-				BMP280StandbyDuration::ms125
-			)) {
-				ESP_LOGI(_logTag, "BMP %d initialization failed", i);
-				return false;
-			}
-		}
-
-		return true;
-	}
-
-	void I2CADIRS::updateBMPs() {
-		float pressureSum = 0;
-		float temperatureSum = 0;
-
-		float pressure;
-		float temperature;
-
-		for (auto& BMP : _BMPs) {
-			BMP.unit.readPressureAndTemperature(pressure, temperature);
-
-			pressureSum += pressure;
-			temperatureSum += temperature;
-		}
-
-		setPressurePa(pressureSum / _BMPs.size());
-		setTemperatureC(temperatureSum / _BMPs.size());
+		setPressurePa(pressure);
+		setTemperatureC(temperature);
 		updateAltitudeFromPressureTemperatureAndReferenceValue();
 
 		//				ESP_LOGI(_logTag, "Avg press: %f, temp: %f, alt: %f", _pressure, _temperature, _altitude);

@@ -34,24 +34,18 @@ namespace pizda {
 			void onTick() override;
 
 		private:
-			std::array<I2CADIRSUnit<IMU>, 1> _IMUs {
-				I2CADIRSUnit<IMU> {
-					config::ADIRS::ADIRU0::mpu9250I2CAddress
-				}
+			constexpr static uint32_t _calibrationXCVRPacketIntervalUs = 1'000'000 / 5;
+
+			I2CADIRSUnit<IMU> _IMU {
+				config::ADIRS::MPU9250I2CAddress
 			};
 
-			std::array<I2CADIRSUnit<BMP280>, 1> _BMPs {
-				I2CADIRSUnit<BMP280> {
-					config::ADIRS::ADIRU0::bmp280I2CAddress
-				}
+			I2CADIRSUnit<BMP280> _BMP280 {
+				config::ADIRS::BMP280I2CAddress
 			};
 
-			bool setupIMUs();
+			void IMUTick();
 
-			void updateIMUs();
-
-			bool setupBMPs();
-
-			void updateBMPs();
+			void BMP280Tick();
 	};
 }

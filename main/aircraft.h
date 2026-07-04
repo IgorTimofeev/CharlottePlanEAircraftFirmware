@@ -34,18 +34,7 @@ namespace pizda {
 
 			Lights lights {};
 			Motors motors {};
-
-			ADCVoltmeter battery {
-				config::battery::unit,
-				getAssignedADCOneshotUnit(config::battery::unit),
-				config::battery::channel,
-
-				config::battery::voltageMin,
-				config::battery::voltageMax,
-				config::battery::voltageDividerR1,
-				config::battery::voltageDividerR2
-			};
-			
+			ADCVoltmeter battery {};
 			AircraftTransceiver transceiver {};
 			
 			#ifdef SIM
@@ -69,16 +58,21 @@ namespace pizda {
 			
 			Aircraft() = default;
 
+			[[noreturn]] static void startErrorLoop(const char* error);
+
+			// -------------------------------- ADC --------------------------------
+
+			// This sucks tbh
 			adc_oneshot_unit_handle_t _ADCOneshotUnit2 {};
 
-			constexpr adc_oneshot_unit_handle_t* getAssignedADCOneshotUnit(const adc_unit_t ADCUnit) {
+			constexpr adc_oneshot_unit_handle_t getAssignedADCOneshotUnit(const adc_unit_t ADCUnit) const {
 				switch (ADCUnit) {
-					case ADC_UNIT_2: return &_ADCOneshotUnit2;
+					case ADC_UNIT_2: return _ADCOneshotUnit2;
 					default: startErrorLoop("failed to find assigned ADC oneshot unit");
 				}
 			}
 
-			[[noreturn]] static void startErrorLoop(const char* error);
+			// -------------------------------- Battery --------------------------------
 
 			int64_t _batteryTickTime = 0;
 

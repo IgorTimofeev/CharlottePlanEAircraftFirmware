@@ -3,6 +3,7 @@
 #include <esp_log.h>
 
 #include "config.h"
+#include "esp_adc/adc_continuous.h"
 
 namespace pizda {
 	Aircraft& Aircraft::getInstance() {
@@ -60,7 +61,24 @@ namespace pizda {
 
 		// Everything else can be safely delayed
 		lights.setup();
-		battery.setup();
+
+		{
+			adc_unit_t ADCUnit;
+			adc_channel_t ADCChannel;
+			ESP_ERROR_CHECK(adc_continuous_io_to_channel(config::battery::pin, &ADCUnit, &ADCChannel));
+
+			battery.setup(
+				ADCUnit,
+				getAssignedADCOneshotUnit(ADCUnit),
+				ADCChannel,
+
+				config::battery::voltageMin,
+				config::battery::voltageMax,
+				config::battery::voltageDividerR1,
+				config::battery::voltageDividerR2
+			);
+		}
+
 		adirs.setup();
 
 		#ifdef SIM

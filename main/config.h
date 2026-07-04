@@ -46,8 +46,7 @@ namespace pizda {
 
 			class battery {
 				public:
-					constexpr static adc_unit_t unit = ADC_UNIT_2;
-					constexpr static adc_channel_t channel = ADC_CHANNEL_7;
+					constexpr static gpio_num_t pin = GPIO_NUM_18;
 
 					constexpr static uint32_t voltageMin = 4 * 3'000;
 					constexpr static uint32_t voltageMax = 4 * 4'200;
@@ -90,16 +89,11 @@ namespace pizda {
 
 			class ADIRS {
 				public:
-					constexpr static uint8_t unitCount = 1;
+					constexpr static uint8_t MPU9250I2CAddress = 0x68;
+					constexpr static uint8_t BMP280I2CAddress = 0x76;
 
-					class ADIRU0 {
-						public:
-							constexpr static uint8_t mpu9250I2CAddress = 0x68;
-							constexpr static uint8_t bmp280I2CAddress = 0x76;
-
-							// constexpr static gpio_num_t mpu9250ss = GPIO_NUM_17;
-							// constexpr static gpio_num_t bmp280ss = GPIO_NUM_18;
-					};
+					// constexpr static gpio_num_t mpu9250ss = GPIO_NUM_17;
+					// constexpr static gpio_num_t bmp280ss = GPIO_NUM_18;
 			};
 
 			class XCVR {
