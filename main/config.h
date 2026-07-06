@@ -13,6 +13,9 @@
 #include <units.h>
 #include <SX1262.h>
 #include <PCA9685.h>
+#include <MS4525.h>
+#include <MPU9250.h>
+#include <BMP280.h>
 
 #include "utilities/math.h"
 #include "types/generic.h"
@@ -89,11 +92,33 @@ namespace pizda {
 
 			class ADIRS {
 				public:
-					constexpr static uint8_t MPU9250I2CAddress = 0x68;
-					constexpr static uint8_t BMP280I2CAddress = 0x76;
+					class MPU9250 {
+						public:
+							constexpr static uint8_t I2CAddress = YOBA::MPU9250::defaultI2CAddress;
+							constexpr static uint32_t I2CFrequencyHz = 400'000;
+					};
 
-					// constexpr static gpio_num_t mpu9250ss = GPIO_NUM_17;
-					// constexpr static gpio_num_t bmp280ss = GPIO_NUM_18;
+					class BMP280 {
+						public:
+							constexpr static uint8_t I2CAddress = YOBA::BMP280::defaultI2CAddress;
+							constexpr static uint32_t I2CFrequencyHz = 1'000'000;
+					};
+
+					class MS4525 {
+						public:
+							constexpr static uint8_t I2CAddress = YOBA::MS4525::defaultI2CAddress;
+
+							// For some reason, MS4525 is really sensitive to I2C wiring issues - even 400 kHz
+							// may produce communication problems. Lowering this to 100-200 kHz is a good idea
+							constexpr static uint32_t I2CFrequencyHz = 200'000;
+
+							// Sensor may be too noisy on low diff pressure values - so we can consider any IAS
+							// lower than given threshold as 0 m/s
+							constexpr static uint16_t minValidAirspeedThresholdMPS = 3;
+
+							// Prevents IAS jittering and excessive noise
+							constexpr static float airspeedEMAFilterFactor = 0.1f;
+					};
 			};
 
 			class XCVR {

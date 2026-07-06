@@ -71,7 +71,7 @@ namespace pizda {
 		return _altitude.load(std::memory_order_acquire);
 	}
 
-	void ADIRS::setAirspeedMS(const float value) {
+	void ADIRS::setAirspeedMPS(const float value) {
 		_airspeedMPS.store(value, std::memory_order_release);
 	}
 

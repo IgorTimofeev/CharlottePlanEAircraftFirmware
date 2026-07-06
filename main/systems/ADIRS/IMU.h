@@ -68,7 +68,7 @@ namespace pizda {
 
 			// -------------------------------- Computed --------------------------------
 
-			constexpr static uint32_t commonTickIntervalUs = std::min(FIFOTickIntervalUs, magTickIntervalUs);
+			constexpr static uint32_t minTickIntervalUs = std::min(FIFOTickIntervalUs, magTickIntervalUs);
 
 			bool setup(BusHAL* bus);
 			void tick();

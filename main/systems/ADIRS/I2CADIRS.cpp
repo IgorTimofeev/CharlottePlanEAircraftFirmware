@@ -5,6 +5,8 @@
 
 #include <esp_timer.h>
 
+#include <EMAFilter.h>
+
 #include "utilities/math.h"
 #include "aircraft.h"
 #include "config.h"
@@ -15,7 +17,11 @@ namespace pizda {
 
 		// IMU
 		{
-			_IMU.hal.setup(ac.I2CMasterBusHandle, _IMU.address, 400'000);
+			_IMU.hal.setup(
+				ac.I2CMasterBusHandle,
+				_IMU.address,
+				_IMU.frequencyHz
+			);
 
 			if (!_IMU.unit.setup(&_IMU.hal)) {
 				ESP_LOGE(_logTag, "IMU initialization failed");
@@ -30,7 +36,11 @@ namespace pizda {
 
 		// BMP280
 		{
-			_BMP280.hal.setup(ac.I2CMasterBusHandle, _BMP280.address, 1'000'000);
+			_BMP280.hal.setup(
+				ac.I2CMasterBusHandle,
+				_BMP280.address,
+				_BMP280.frequencyHz
+			);
 
 			if (!_BMP280.unit.setup(
 				&_BMP280.hal,
@@ -44,6 +54,35 @@ namespace pizda {
 				ESP_LOGI(_logTag, "BMP280 initialization failed");
 				return;
 			}
+		}
+
+		// Airspeed sensor
+		{
+			// Initializing
+			auto MS4525Error = _MS4525.setup(
+				ac.I2CMasterBusHandle,
+				MS4525::defaultI2CAddress,
+				config::ADIRS::MS4525::I2CFrequencyHz,
+
+				MS4525OutputType::a,
+				-1,
+				1
+			);
+
+			if (!checkMS4525Error("MS4525 initialization failed", MS4525Error))
+				return;
+
+			// Computing meadian differential pressure bias
+			float diffPressureBias = 0;
+			MS4525Error = _MS4525.computeMedianDifferentialPressureBias<20, MS4525::defaultSampleRateHz>(diffPressureBias);
+
+			if (!checkMS4525Error("failed to compute MS4525 median diff pressure bias", MS4525Error))
+				return;
+
+			// Setting computed bias
+			_MS4525.setDifferentialPressureBias(diffPressureBias);
+
+			// ESP_LOGI(_logTag, "MS4525 differential pressure bias: %f", diffPressureBias);
 		}
 
 		ADIRS::setup();
@@ -163,8 +202,9 @@ namespace pizda {
 	void I2CADIRS::onTick() {
 		IMUTick();
 		BMP280Tick();
+		MS4525Tick();
 
-		vTaskDelay(pdMS_TO_TICKS(std::max(IMU::commonTickIntervalUs / 1000, portTICK_PERIOD_MS)));
+		vTaskDelay(_minTickIntervalTicks);
 	}
 
 	void I2CADIRS::IMUTick() {
@@ -177,7 +217,7 @@ namespace pizda {
 		updateHeadingFromYaw();
 
 		// Velocity
-		setAirspeedMS(std::abs(_IMU.unit.getIntegratedVelocityMPS()));
+		// setAirspeedMS(std::abs(_IMU.unit.getIntegratedVelocityMPS()));
 
 		// ESP_LOGI("aefa","vel: %f", integratedVelocityMsSum);
 
@@ -198,5 +238,36 @@ namespace pizda {
 		updateAltitudeFromPressureTemperatureAndReferenceValue();
 
 		//				ESP_LOGI(_logTag, "Avg press: %f, temp: %f, alt: %f", _pressure, _temperature, _altitude);
+	}
+
+	bool I2CADIRS::checkMS4525Error(const char* prefix, const MS4525Error error) {
+		if (error == MS4525Error::none)
+			return true;
+
+		ESP_LOGE(_logTag, "%s: %s", prefix, MS4525::errorToString(error));
+
+		return false;
+	}
+
+	void I2CADIRS::MS4525Tick() {
+		if (esp_timer_get_time() < _MS4525TickTimeUs)
+			return;
+
+		_MS4525TickTimeUs = esp_timer_get_time() + _MS4525TickIntervalUs;
+
+		// Reading diff pressure & temperature
+		float differentialPressurePSI, temperatureC;
+		const auto error = _MS4525.readDifferentialPressureAndTemperature(differentialPressurePSI, temperatureC);
+		checkMS4525Error("failed to read MS4525 diff pressure & temperature", error);
+
+		// Computing IAS using diff pressure
+		auto IASMPS = MS4525::computeIndicatedAirspeedMPS(differentialPressurePSI);
+
+		// Rejecting too low values
+		if (IASMPS < config::ADIRS::MS4525::minValidAirspeedThresholdMPS)
+			IASMPS = 0;
+
+		// Applying EMA filter
+		setAirspeedMPS(EMAFilter::apply(getAirspeedMPS(), IASMPS, config::ADIRS::MS4525::airspeedEMAFilterFactor));
 	}
 }

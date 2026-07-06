@@ -21,7 +21,8 @@ namespace pizda {
 			bus.scl_io_num = config::I2C::SCL;
 			bus.sda_io_num = config::I2C::SDA;
 			bus.glitch_ignore_cnt = 7;
-			bus.flags.enable_internal_pullup = true;
+			// Do we need this?
+			bus.flags.enable_internal_pullup = false;
 
 			ESP_ERROR_CHECK(i2c_new_master_bus(&bus, &I2CMasterBusHandle));
 		}

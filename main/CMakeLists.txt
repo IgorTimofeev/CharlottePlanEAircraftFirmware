@@ -24,6 +24,7 @@ idf_component_register(
         ESP-IDF-BMP280
         ESP-IDF-ADCVoltmeter
         ESP-IDF-PCA9685
+        ESP-IDF-MS4525
 )
 
 target_compile_options(${COMPONENT_LIB} PUBLIC -std=gnu++26)

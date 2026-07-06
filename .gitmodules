@@ -37,3 +37,6 @@
 [submodule "components/ESP-IDF-EMAFilter"]
 	path = components/ESP-IDF-EMAFilter
 	url = https://github.com/IgorTimofeev/ESP-IDF-EMAFilter.git
+[submodule "components/ESP-IDF-MS4525"]
+	path = components/ESP-IDF-MS4525
+	url = https://github.com/IgorTimofeev/ESP-IDF-MS4525.git

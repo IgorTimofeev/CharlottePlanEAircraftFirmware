@@ -42,7 +42,7 @@ namespace pizda {
 			void setPitchRad(const float value);
 			void setYawRad(const float value);
 			void updateHeadingFromYaw();
-			void setAirspeedMS(const float value);
+			void setAirspeedMPS(const float value);
 
 			static float computeAltitude(
 				const float pressurePa,
