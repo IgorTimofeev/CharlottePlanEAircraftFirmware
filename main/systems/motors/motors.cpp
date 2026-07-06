@@ -25,12 +25,10 @@ namespace pizda {
 
 		for (uint8_t mt = 0; mt < static_cast<uint8_t>(MotorType::maxValue) + 1; ++mt) {
 			const auto motorType = static_cast<MotorType>(mt);
-
-			const auto motor = getByType(motorType);
 			const auto settings = ac.settings.motors.getByType(motorType);
 
-			if (motor && settings) {
-				motor->setSettings(settings);
+			if (settings) {
+				getByType(motorType)->setSettings(settings);
 
 				// ESP_LOGI(_logTag, "loaded type: %d, min: %d, max: %d, reverse: %d", static_cast<uint8_t>(motorType), settings->min, settings->max, settings->reverse);
 			}
@@ -86,17 +84,15 @@ namespace pizda {
 	}
 
 	void Motors::onStart() {
-		while (true) {
-			std::array<uint16_t, static_cast<uint8_t>(MotorType::maxValue) + 1> duties {};
+		std::array<uint16_t, static_cast<uint8_t>(MotorType::maxValue) + 1> duties {};
 
+		while (true) {
 			for (uint8_t i = 0; i < duties.size(); ++i) {
 				// if (i == 5) {
 				// 	ESP_LOGI("motr", "flap power: %d, pulse width: %d, duty: %d", _motors[i].getPower(), _motors[i].getPulseWidthUs(), _motors[i].getDuty());
 				// }
 
-				const auto motor = getByType(static_cast<MotorType>(i));
-
-				duties[i] = motor ? motor->getDuty() : 0;
+				duties[i] = getByType(static_cast<MotorType>(i))->getDuty();
 			}
 
 			checkPCA9685Error(_PCA9685.setDuties<0, duties.size()>(duties));

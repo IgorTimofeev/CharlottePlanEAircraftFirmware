@@ -412,15 +412,12 @@ namespace pizda {
 
 		// Elevator & rudder
 		{
-			const auto leftTailMotor = ac.motors.getByType(MotorType::tailLeft);
-			const auto rightTailMotor = ac.motors.getByType(MotorType::tailRight);
-
 			// ESP_LOGI(_logTag, "raw rudder: %f, elevator: %f", ac.remoteData.controls.rudder, ac.remoteData.controls.elevator);
 			// ESP_LOGI(_logTag, "factors rudder: %f, elevator: %f", _rudderFactor, _elevatorFactor);
 
 			#ifdef SIM
-				leftTailMotor->setPowerF(_elevatorFactor);
-				rightTailMotor->setPowerF(_rudderFactor);
+				ac.motors.getByType(MotorType::tailLeft)->setPowerF(_elevatorFactor);
+				ac.motors.getByType(MotorType::tailRight)->setPowerF(_rudderFactor);
 
 			#else
 				// V-tail mixing
@@ -431,8 +428,8 @@ namespace pizda {
 
 				// ESP_LOGI(_logTag, "tail power left: %f, left: %f", leftPower, rightPower);
 
-				leftTailMotor->setPowerF(leftPower);
-				rightTailMotor->setPowerF(rightPower);
+				ac.motors.getByType(MotorType::tailLeft)->setPowerF(leftPower);
+				ac.motors.getByType(MotorType::tailRight)->setPowerF(rightPower);
 
 			#endif
 		}
