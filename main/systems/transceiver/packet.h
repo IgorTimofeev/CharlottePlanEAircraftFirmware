@@ -53,7 +53,7 @@ namespace pizda {
 		autopilotYawToRollPID,
 		autopilotRollToAileronsPID,
 		autopilotStabilizedModeRollAngleIncrementRadPerSecond,
-		autopilotRollAngleLPFFactorPerSecond,
+		autopilotRollAngleEMAFilterFactorPerSecond,
 		autopilotMaxAileronsPercent,
 
 		// Vertical
@@ -64,7 +64,7 @@ namespace pizda {
 		autopilotAltitudeToPitchPID,
 		autopilotPitchToElevatorPID,
 		autopilotStabilizedModePitchAngleIncrementRadPerSecond,
-		autopilotPitchAngleLPFFactorPerSecond,
+		autopilotPitchAngleEMAFilterFactorPerSecond,
 		autopilotMaxElevatorPercent,
 
 		// Longitudinal
@@ -180,7 +180,7 @@ namespace pizda {
 	class AircraftSTierTelemetryPacket {
 		public:
 			// Roll / pitch / yaw
-			// Precision of 0.25 - 0.5 deg should be enough for any client-side visualization with LPF
+			// Precision of 0.25 - 0.5 deg should be enough for any client-side visualization with EMA filter
 			// So 360 * 1 / 0.25 = 1440 ~= 10 bits
 
 			// Roll range is [-180; 180] deg

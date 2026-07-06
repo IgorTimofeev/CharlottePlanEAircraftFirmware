@@ -269,22 +269,18 @@ namespace pizda {
 
 				auto motorType = static_cast<MotorType>(stream.readUint8(RemoteSystemPacket::motorConfigurationTypeLengthBits));
 
-				auto motor = ac.motors.getByType(motorType);
+				// Settings
 				auto settings = ac.settings.motors.getByType(motorType);
+				settings->min = stream.readUint16(RemoteSystemPacket::motorConfigurationMinLengthBits);
+				settings->max = stream.readUint16(RemoteSystemPacket::motorConfigurationMaxLengthBits);
+				settings->reverse = stream.readBool();
+				settings->sanitize();
 
-				if (motor && settings) {
-					// Settings
-					settings->min = stream.readUint16(RemoteSystemPacket::motorConfigurationMinLengthBits);
-					settings->max = stream.readUint16(RemoteSystemPacket::motorConfigurationMaxLengthBits);
-					settings->reverse = stream.readBool();
-					settings->sanitize();
+				// Motor
+				ac.motors.getByType(motorType)->setSettings(settings);
+				ac.settings.motors.writeLater();
 
-					// Motor
-					motor->setSettings(settings);
-					ac.settings.motors.writeLater();
-
-					ESP_LOGI(_logTag, "type: %d, min: %d, max: %d, reverse: %d", static_cast<uint8_t>(motorType), settings->min, settings->max, settings->reverse);
-				}
+				ESP_LOGI(_logTag, "type: %d, min: %d, max: %d, reverse: %d", static_cast<uint8_t>(motorType), settings->min, settings->max, settings->reverse);
 
 				return true;
 			}
@@ -479,7 +475,7 @@ namespace pizda {
 
 				return true;
 			}
-			case RemoteSystemPacketType::autopilotRollAngleLPFFactorPerSecond: {
+			case RemoteSystemPacketType::autopilotRollAngleEMAFilterFactorPerSecond: {
 				if (!validatePayloadChecksumAndLength(
 					stream,
 					RemoteSystemPacket::typeLengthBits
@@ -490,7 +486,7 @@ namespace pizda {
 
 				auto& ac = Aircraft::getInstance();
 
-				ac.settings.autopilot.configuration.rollAngleLPFFactorPerSecond = stream.readFloat();
+				ac.settings.autopilot.configuration.rollAngleEMAFilterFactorPerSecond = stream.readFloat();
 				ac.settings.autopilot.configuration.writeLater();
 
 				return true;
@@ -606,7 +602,7 @@ namespace pizda {
 
 				return true;
 			}
-			case RemoteSystemPacketType::autopilotPitchAngleLPFFactorPerSecond: {
+			case RemoteSystemPacketType::autopilotPitchAngleEMAFilterFactorPerSecond: {
 				if (!validatePayloadChecksumAndLength(
 					stream,
 					RemoteSystemPacket::typeLengthBits
@@ -617,7 +613,7 @@ namespace pizda {
 
 				auto& ac = Aircraft::getInstance();
 
-				ac.settings.autopilot.configuration.pitchAngleLPFFactorPerSecond = stream.readFloat();
+				ac.settings.autopilot.configuration.pitchAngleEMAFilterFactorPerSecond = stream.readFloat();
 				ac.settings.autopilot.configuration.writeLater();
 
 				return true;

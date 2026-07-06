@@ -45,7 +45,12 @@ namespace pizda {
 					case MotorType::tailLeft: return &tailLeft;
 					case MotorType::tailRight: return &tailRight;
 
-					default: return nullptr;
+					default: {
+						char pizda[32];
+						std::snprintf(pizda, sizeof(pizda), "unsupported motor type: %d", std::to_underlying(type));
+
+						esp_system_abort(pizda);
+					}
 				}
 			}
 		

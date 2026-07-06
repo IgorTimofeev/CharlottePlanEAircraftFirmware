@@ -122,7 +122,7 @@ namespace pizda {
 				_rollTargetRad = EMAFilter::applyToAngle(
 					_rollTargetRad,
 					0,
-					EMAFilter::getDeltaTimeSFactor(ac.settings.autopilot.configuration.rollAngleLPFFactorPerSecond, deltaTimeS)
+					EMAFilter::getDeltaTimeSFactor(ac.settings.autopilot.configuration.rollAngleEMAFilterFactorPerSecond, deltaTimeS)
 				);
 			}
 			else {
@@ -167,7 +167,7 @@ namespace pizda {
 					_rollTargetRad = EMAFilter::applyToAngle(
 						_rollTargetRad,
 						rollTargetRad,
-						EMAFilter::getDeltaTimeSFactor(ac.settings.autopilot.configuration.rollAngleLPFFactorPerSecond, deltaTimeS)
+						EMAFilter::getDeltaTimeSFactor(ac.settings.autopilot.configuration.rollAngleEMAFilterFactorPerSecond, deltaTimeS)
 					);
 				}
 			}
@@ -211,7 +211,7 @@ namespace pizda {
 				_pitchTargetRad = EMAFilter::applyToAngle(
 					_pitchTargetRad,
 					0,
-					EMAFilter::getDeltaTimeSFactor(ac.settings.autopilot.configuration.pitchAngleLPFFactorPerSecond, deltaTimeS)
+					EMAFilter::getDeltaTimeSFactor(ac.settings.autopilot.configuration.pitchAngleEMAFilterFactorPerSecond, deltaTimeS)
 				);
 			}
 			else {
@@ -280,7 +280,7 @@ namespace pizda {
 					_pitchTargetRad = EMAFilter::applyToAngle(
 						_pitchTargetRad,
 						pitchTargetRad,
-						EMAFilter::getDeltaTimeSFactor(ac.settings.autopilot.configuration.pitchAngleLPFFactorPerSecond, deltaTimeS)
+						EMAFilter::getDeltaTimeSFactor(ac.settings.autopilot.configuration.pitchAngleEMAFilterFactorPerSecond, deltaTimeS)
 					);
 				}
 			}

@@ -27,11 +27,9 @@ namespace pizda {
 			const auto motorType = static_cast<MotorType>(mt);
 			const auto settings = ac.settings.motors.getByType(motorType);
 
-			if (settings) {
-				getByType(motorType)->setSettings(settings);
+			getByType(motorType)->setSettings(settings);
 
 				// ESP_LOGI(_logTag, "loaded type: %d, min: %d, max: %d, reverse: %d", static_cast<uint8_t>(motorType), settings->min, settings->max, settings->reverse);
-			}
 		}
 
 		xTaskCreatePinnedToCore(
@@ -65,7 +63,12 @@ namespace pizda {
 			case MotorType::cameraPitch: return &_cameraPitch;
 			case MotorType::cameraYaw: return &_cameraYaw;
 
-			default: return nullptr;
+			default: {
+				char pizda[32];
+				std::snprintf(pizda, sizeof(pizda), "unsupported motor type: %d", std::to_underlying(type));
+
+				esp_system_abort(pizda);
+			}
 		}
 	}
 

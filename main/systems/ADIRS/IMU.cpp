@@ -177,11 +177,11 @@ namespace pizda {
 
 		// Axis swap, fuck MPU
 		// Also applying LPF because mag is noisy as shit
-		constexpr static float magLPFFactorPerSecond = 2.f;
-		const auto magLPFFactor = magLPFFactorPerSecond * static_cast<float>(deltaTime) / 1'000'000.f;
-		_magDataFiltered.setX(EMAFilter::apply(_magDataFiltered.getX(), y - _magBias.getY(), magLPFFactor));
-		_magDataFiltered.setY(EMAFilter::apply(_magDataFiltered.getY(), x - _magBias.getX(), magLPFFactor));
-		_magDataFiltered.setZ(EMAFilter::apply(_magDataFiltered.getZ(), -(z - _magBias.getZ()), magLPFFactor));
+		constexpr static float magEMAFilterFactorPerSecond = 2.f;
+		const auto magEMAFilterFactor = magEMAFilterFactorPerSecond * static_cast<float>(deltaTime) / 1'000'000.f;
+		_magDataFiltered.setX(EMAFilter::apply(_magDataFiltered.getX(), y - _magBias.getY(), magEMAFilterFactor));
+		_magDataFiltered.setY(EMAFilter::apply(_magDataFiltered.getY(), x - _magBias.getX(), magEMAFilterFactor));
+		_magDataFiltered.setZ(EMAFilter::apply(_magDataFiltered.getZ(), -(z - _magBias.getZ()), magEMAFilterFactor));
 
 		// _magDataFiltered.setX(y - _magBias.getY());
 		// _magDataFiltered.setY(x - _magBias.getX());
