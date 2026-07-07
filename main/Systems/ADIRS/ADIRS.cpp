@@ -8,20 +8,6 @@
 #include "Aircraft.hpp"
 
 namespace pizda {
-	void ADIRS::setup() {
-		xTaskCreatePinnedToCore(
-			[](void* arg) {
-				static_cast<ADIRS*>(arg)->onStart();
-			},
-			"ADIRS",
-			4 * 1024,
-			this,
-			10,
-			nullptr,
-			0
-		);
-	}
-
 	float ADIRS::getRollRad() const {
 		return _rollRad.load(std::memory_order_acquire);
 	}
@@ -161,33 +147,5 @@ namespace pizda {
 
 	void ADIRS::setAltitude(const float value) {
 		_altitude.store(value, std::memory_order_release);
-	}
-
-	void ADIRS::onStart() {
-		auto& ac = Aircraft::getInstance();
-
-		while (true) {
-			const auto system = ac.aircraftData.calibration.getSystem();
-
-			if (
-				ac.aircraftData.calibration.isCalibrating()
-				&& (
-					system == AircraftCalibrationSystem::accelAndGyro
-					|| system == AircraftCalibrationSystem::mag
-				)
-			) {
-				if (system == AircraftCalibrationSystem::accelAndGyro) {
-					onCalibrateAccelAndGyro();
-				}
-				else {
-					onCalibrateMag();
-				}
-				
-				ac.aircraftData.calibration.setCalibrating(false);
-			}
-			else {
-				onTick();
-			}
-		}
 	}
 }

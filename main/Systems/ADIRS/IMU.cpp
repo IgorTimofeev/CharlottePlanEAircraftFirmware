@@ -214,6 +214,7 @@ namespace pizda {
 		uint8_t sample[FIFOSampleLength] {};
 		Vector3F accelerationGSum {};
 		float x, y, z;
+    	float yawWithoutDeclinationRad = _yawRad;
 
 		for (uint32_t i = 0; i < sampleCount; i++) {
 			// -------------------------------- FIFO data --------------------------------
@@ -247,11 +248,11 @@ namespace pizda {
 
 				_rollRad,
 				_pitchRad,
-				_yawRad
+				yawWithoutDeclinationRad
 			);
 
-			// Applying magnetic declination
-			_yawRad += toRadians(ac.settings.ADIRS.getMagneticDeclinationDeg());
+			// Applying magnetic declination for yaw
+			_yawRad = yawWithoutDeclinationRad + toRadians(ac.settings.ADIRS.getMagneticDeclinationDeg());
 
 			// ESP_LOGI(_logTag, "RPY deg: %f x %f x %f", toDegrees(_rollRad),  toDegrees(_pitchRad),  toDegrees(_yawRad));
 
@@ -291,6 +292,8 @@ namespace pizda {
 		_MPU.resetFIFO();
 		_MPU.setFIFODataSource(FIFODataSource);
 		_MPU.readAndClearInterruptStatus();
+
+
 
     	// Computing acceleration
 		accelerationGSum /= sampleCount;
