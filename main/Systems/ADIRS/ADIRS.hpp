@@ -13,8 +13,6 @@ namespace pizda {
 		public:
 			virtual ~ADIRS() = default;
 
-			virtual void setup();
-
 			float getRollRad() const;
 			float getPitchRad() const;
 			float getYawRad() const;
@@ -33,10 +31,6 @@ namespace pizda {
 
 		protected:
 			constexpr static auto _logTag = "ADIRS";
-			
-			virtual void onTick() = 0;
-			virtual void onCalibrateAccelAndGyro() = 0;
-			virtual void onCalibrateMag() = 0;
 
 			void setRollRad(const float value);
 			void setPitchRad(const float value);
@@ -93,7 +87,5 @@ namespace pizda {
 			std::atomic<float> _latitude { _homeLatitude.load(std::memory_order_acquire) };
 			std::atomic<float> _longitude { _homeLongitude.load(std::memory_order_acquire) };
 			std::atomic<float> _altitude { _homeAltitude.load(std::memory_order_acquire) };
-
-			[[noreturn]] void onStart();
 	};
 }

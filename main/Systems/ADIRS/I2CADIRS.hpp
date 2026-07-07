@@ -28,13 +28,10 @@ namespace pizda {
 		// -------------------------------- Main --------------------------------
 
 		public:
-			void setup() override;
+			void setup();
 			void setHomeCoordinates(float latitude, float longitude, float altitude) override;
 
 		protected:
-			void onCalibrateAccelAndGyro() override;
-			void onCalibrateMag() override;
-			void onTick() override;
 
 		private:
 			constexpr static uint32_t _calibrationXCVRPacketIntervalUs = 1'000'000 / 5;
@@ -42,39 +39,50 @@ namespace pizda {
 		// -------------------------------- IMU --------------------------------
 
 		private:
+			constexpr static uint32_t _IMUTickIntervalTicks =
+				pdMS_TO_TICKS(std::max<uint32_t>(IMU::minTickIntervalUs / 1000, portTICK_PERIOD_MS));
+
 			I2CADIRSUnit<IMU> _IMU {
 				config::ADIRS::MPU9250::I2CAddress,
 				config::ADIRS::MPU9250::I2CFrequencyHz
 			};
 
-			void IMUTick();
+			void onCalibrateAccelAndGyro();
+			void onCalibrateMag();
+			void onIMUTick();
+			void onIMUStart();
 
-		// -------------------------------- BMP280 --------------------------------
+		// -------------------------------- Barometer --------------------------------
 
 		private:
-			I2CADIRSUnit<BMP280> _BMP280 {
+			constexpr static uint16_t _barometerTickRateHz = 12;
+
+			constexpr static uint32_t _barometerTickIntervalTicks =
+				pdMS_TO_TICKS(std::max<uint32_t>(1'000'000 / _barometerTickRateHz / 1000, portTICK_PERIOD_MS));
+
+			I2CADIRSUnit<BMP280> _barometer {
 				config::ADIRS::BMP280::I2CAddress,
 				config::ADIRS::BMP280::I2CFrequencyHz
 			};
 
-			void BMP280Tick();
+			void onBarometerTick();
+			void onBarometerStart();
 
-		// -------------------------------- MS4525 --------------------------------
+			// -------------------------------- Airspeed --------------------------------
 
 		private:
-			MS4525 _MS4525 {};
+			MS4525 _airspeedSensor {};
 
-			constexpr static uint32_t _MS4525TickIntervalUs = 1'000'000 / MS4525::defaultSampleRateHz;
-			int64_t _MS4525TickTimeUs = 0;
-
-			void MS4525Tick();
+			constexpr static uint32_t _airspeedTickIntervalTicks =
+				pdMS_TO_TICKS(std::max<uint32_t>(1'000'000 / MS4525::defaultSampleRateHz / 1000, portTICK_PERIOD_MS));
 
 			static bool checkMS4525Error(const char* prefix, const MS4525Error error);
+
+			void onAirspeedTick();
+			void onAirspeedStart();
 
 		// -------------------------------- Summary --------------------------------
 
 		private:
-			constexpr static uint32_t _minTickIntervalUs = std::min(IMU::minTickIntervalUs, _MS4525TickIntervalUs);
-			constexpr static uint32_t _minTickIntervalTicks = pdMS_TO_TICKS(std::max(_minTickIntervalUs / 1000, portTICK_PERIOD_MS));
 	};
 }

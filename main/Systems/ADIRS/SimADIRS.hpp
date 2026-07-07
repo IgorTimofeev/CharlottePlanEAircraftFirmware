@@ -5,9 +5,7 @@
 namespace pizda {
 	class SimADIRS : public ADIRS {
 		protected:
-			void onTick() override;
-			void onCalibrateAccelAndGyro() override;
-			void onCalibrateMag() override;
+			void setup();
 			
 		private:
 			static void simulateCalibration();
