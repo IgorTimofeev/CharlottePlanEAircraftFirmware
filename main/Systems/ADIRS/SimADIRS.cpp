@@ -15,26 +15,42 @@
 #ifdef SIM
 
 namespace pizda {
-	void SimADIRS::onTick() {
-		const auto& packet = Aircraft::getInstance().simLink.getLastSimPacket();
-		
-		updateSlipAndSkidFactor(packet.accelerationX, 2);
-		
-		setRollRad(packet.rollRad);
-		setPitchRad(packet.pitchRad);
-		setYawRad(packet.yawRad);
-		updateHeadingFromYaw();
-		
-		setLatitude(packet.latitudeRad);
-		setLongitude(packet.longitudeRad);
-		
-		setAirspeedMPS(packet.speedMPS);
-		
-		setPressurePa(packet.pressurePA);
-		setTemperatureC(packet.temperatureC);
-		updateAltitudeFromPressureTemperatureAndReferenceValue();
-		
-		vTaskDelay(pdMS_TO_TICKS(1'000 / 30));
+	void SimADIRS::setup() {
+		xTaskCreatePinnedToCore(
+			[](void* arg) {
+				static_cast<I2CADIRS*>(arg)->onStart();
+			},
+			"I2CADIRSIMUAndBMP280",
+			4 * 1024,
+			this,
+			10,
+			nullptr,
+			0
+		);
+	}
+
+	void SimADIRS::onStart() {
+		while (true) {
+			const auto& packet = Aircraft::getInstance().simLink.getLastSimPacket();
+
+			updateSlipAndSkidFactor(packet.accelerationX, 2);
+
+			setRollRad(packet.rollRad);
+			setPitchRad(packet.pitchRad);
+			setYawRad(packet.yawRad);
+			updateHeadingFromYaw();
+
+			setLatitude(packet.latitudeRad);
+			setLongitude(packet.longitudeRad);
+
+			setAirspeedMPS(packet.speedMPS);
+
+			setPressurePa(packet.pressurePA);
+			setTemperatureC(packet.temperatureC);
+			updateAltitudeFromPressureTemperatureAndReferenceValue();
+
+			vTaskDelay(pdMS_TO_TICKS(1'000 / 30));
+		}
 	}
 	
 	void SimADIRS::onCalibrateAccelAndGyro() {

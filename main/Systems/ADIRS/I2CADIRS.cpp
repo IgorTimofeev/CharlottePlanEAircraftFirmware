@@ -12,41 +12,79 @@
 
 namespace pizda {
 	void I2CADIRS::setup() {
-		xTaskCreatePinnedToCore(
-			[](void* arg) {
-				static_cast<I2CADIRS*>(arg)->onIMUStart();
-			},
-			"I2CADIRSIMU",
-			4 * 1024,
-			this,
-			10,
-			nullptr,
-			0
-		);
+		const auto& ac = Aircraft::getInstance();
 
-		xTaskCreatePinnedToCore(
-			[](void* arg) {
-				static_cast<I2CADIRS*>(arg)->onBarometerStart();
-			},
-			"I2CADIRSIMUBarometer",
-			4 * 1024,
-			this,
-			16,
-			nullptr,
-			0
-		);
+		// IMU
+		{
+			_IMU.hal.setup(
+				ac.I2CMasterBusHandle,
+				_IMU.address,
+				_IMU.frequencyHz
+			);
 
-		xTaskCreatePinnedToCore(
-			[](void* arg) {
-				static_cast<I2CADIRS*>(arg)->onAirspeedStart();
-			},
-			"I2CADIRSAirspeed",
-			4 * 1024,
-			this,
-			16,
-			nullptr,
-			0
-		);
+			if (!_IMU.unit.setup(&_IMU.hal)) {
+				ESP_LOGE(_logTag, "IMU initialization failed");
+				return;
+			}
+
+			// Updating biases from settings
+			_IMU.unit.setAccelBias(ac.settings.ADIRS.getAccelBias());
+			_IMU.unit.setGyroBias(ac.settings.ADIRS.getGyroBias());
+			_IMU.unit.setMagBias(ac.settings.ADIRS.getMagBias());
+		}
+
+		// BMP280
+		{
+			_BMP280.hal.setup(
+				ac.I2CMasterBusHandle,
+				_BMP280.address,
+				_BMP280.frequencyHz
+			);
+
+			if (!_BMP280.unit.setup(
+				&_BMP280.hal,
+
+				BMP280Mode::normal,
+				BMP280Oversampling::x16,
+				BMP280Oversampling::x2,
+				BMP280Filter::x4,
+				BMP280StandbyDuration::ms125
+			)) {
+				ESP_LOGI(_logTag, "BMP280 initialization failed");
+				return;
+			}
+		}
+
+		// Airspeed sensor
+		{
+			// Initializing
+			auto MS4525Error = _MS4525.setup(
+				ac.I2CMasterBusHandle,
+				MS4525::defaultI2CAddress,
+				config::ADIRS::MS4525::I2CFrequencyHz,
+
+				MS4525OutputType::a,
+				-1,
+				1
+			);
+
+			if (!checkMS4525Error("MS4525 initialization failed", MS4525Error))
+				return;
+
+			// Computing meadian differential pressure bias
+			float diffPressureBias = 0;
+			MS4525Error = _MS4525.computeMedianDifferentialPressureBias<20, MS4525::defaultSampleRateHz>(diffPressureBias);
+
+			if (!checkMS4525Error("failed to compute MS4525 median diff pressure bias", MS4525Error))
+				return;
+
+			// Setting computed bias
+			_MS4525.setDifferentialPressureBias(diffPressureBias);
+
+			// ESP_LOGI(_logTag, "MS4525 differential pressure bias: %f", diffPressureBias);
+		}
+
+		ADIRS::setup();
 	}
 
 	void I2CADIRS::setHomeCoordinates(const float latitude, const float longitude, const float altitude) {
@@ -160,7 +198,15 @@ namespace pizda {
 		ESP_LOGI(_logTag, "mag calibration finished");
 	}
 
-	void I2CADIRS::onIMUTick() {
+	void I2CADIRS::onTick() {
+		IMUTick();
+		BMP280Tick();
+		MS4525Tick();
+
+		vTaskDelay(_minTickIntervalTicks);
+	}
+
+	void I2CADIRS::IMUTick() {
 		_IMU.unit.tick();
 
 		// Roll / pitch / yaw
@@ -182,98 +228,35 @@ namespace pizda {
 		updateSlipAndSkidFactor(_IMU.unit.getAccelerationG().getX(), IMU::accelOperationalRangeG);
 	}
 
-	void I2CADIRS::onIMUStart() {
-		auto& ac = Aircraft::getInstance();
-		const auto system = ac.aircraftData.calibration.getSystem();
-
-		_IMU.hal.setup(
-			ac.I2CMasterBusHandle,
-			_IMU.address,
-			_IMU.frequencyHz
-		);
-
-		if (!_IMU.unit.setup(&_IMU.hal)) {
-			ESP_LOGE(_logTag, "IMU initialization failed");
-			return;
-		}
-
-		// Updating biases from settings
-		_IMU.unit.setAccelBias(ac.settings.ADIRS.getAccelBias());
-		_IMU.unit.setGyroBias(ac.settings.ADIRS.getGyroBias());
-		_IMU.unit.setMagBias(ac.settings.ADIRS.getMagBias());
-
-		while (true) {
-			// Calibration mode
-			if (
-				ac.aircraftData.calibration.isCalibrating()
-				&& (
-					system == AircraftCalibrationSystem::accelAndGyro
-					|| system == AircraftCalibrationSystem::mag
-				)
-			) {
-				if (system == AircraftCalibrationSystem::accelAndGyro) {
-					onCalibrateAccelAndGyro();
-				}
-				else {
-					onCalibrateMag();
-				}
-
-				ac.aircraftData.calibration.setCalibrating(false);
-			}
-			// Normal mode
-			else {
-				onIMUTick();
-
-				vTaskDelay(_IMUTickIntervalTicks);
-			}
-		}
-	}
-
-	void I2CADIRS::onBarometerTick() {
+	void I2CADIRS::BMP280Tick() {
 		float pressure, temperature;
-		_barometer.unit.readPressureAndTemperature(pressure, temperature);
+		_BMP280.unit.readPressureAndTemperature(pressure, temperature);
 
 		setPressurePa(pressure);
 		setTemperatureC(temperature);
 		updateAltitudeFromPressureTemperatureAndReferenceValue();
 
 		//				ESP_LOGI(_logTag, "Avg press: %f, temp: %f, alt: %f", _pressure, _temperature, _altitude);
-
 	}
 
-	void I2CADIRS::onBarometerStart() {
-		const auto& ac = Aircraft::getInstance();
+	bool I2CADIRS::checkMS4525Error(const char* prefix, const MS4525Error error) {
+		if (error == MS4525Error::none)
+			return true;
 
-		_barometer.hal.setup(
-			ac.I2CMasterBusHandle,
-			_barometer.address,
-			_barometer.frequencyHz
-		);
+		ESP_LOGE(_logTag, "%s: %s", prefix, MS4525::errorToString(error));
 
-		if (!_barometer.unit.setup(
-			&_barometer.hal,
+		return false;
+	}
 
-			BMP280Mode::normal,
-			BMP280Oversampling::x4,
-			BMP280Oversampling::x2,
-			BMP280Filter::x4,
-			BMP280StandbyDuration::ms63
-		)) {
-			ESP_LOGI(_logTag, "barometer initialization failed");
+	void I2CADIRS::MS4525Tick() {
+		if (esp_timer_get_time() < _MS4525TickTimeUs)
 			return;
-		}
 
-		while (true) {
-			onBarometerTick();
+		_MS4525TickTimeUs = esp_timer_get_time() + _MS4525TickIntervalUs;
 
-			vTaskDelay(_barometerTickIntervalTicks);
-		}
-	}
-
-	void I2CADIRS::onAirspeedTick() {
 		// Reading diff pressure & temperature
 		float differentialPressurePSI, temperatureC;
-		const auto error = _airspeedSensor.readDifferentialPressureAndTemperature(differentialPressurePSI, temperatureC);
+		const auto error = _MS4525.readDifferentialPressureAndTemperature(differentialPressurePSI, temperatureC);
 		checkMS4525Error("failed to read MS4525 diff pressure & temperature", error);
 
 		// Computing IAS using diff pressure
@@ -285,53 +268,5 @@ namespace pizda {
 
 		// Applying EMA filter
 		setAirspeedMPS(EMAFilter::apply(getAirspeedMPS(), IASMPS, config::ADIRS::MS4525::airspeedEMAFilterFactor));
-	}
-
-	void I2CADIRS::onAirspeedStart() {
-		const auto& ac = Aircraft::getInstance();
-
-		// Initializing
-		auto MS4525Error = _airspeedSensor.setup(
-			ac.I2CMasterBusHandle,
-			MS4525::defaultI2CAddress,
-			config::ADIRS::MS4525::I2CFrequencyHz,
-
-			MS4525OutputType::a,
-			-1,
-			1
-		);
-
-		if (!checkMS4525Error("MS4525 initialization failed", MS4525Error))
-			return;
-
-		// Computing meadian differential pressure bias
-		float diffPressureBias = 0;
-		MS4525Error = _airspeedSensor.computeMedianDifferentialPressureBias<200, MS4525::defaultSampleRateHz>(diffPressureBias);
-
-		if (!checkMS4525Error("failed to compute MS4525 median diff pressure bias", MS4525Error))
-			return;
-
-		// Setting computed bias
-		_airspeedSensor.setDifferentialPressureBias(diffPressureBias);
-
-		// ESP_LOGI(_logTag, "MS4525 differential pressure bias: %f", diffPressureBias);
-
-		while (true) {
-			// Normal mode
-			if (!ac.aircraftData.calibration.isCalibrating()) {
-				onAirspeedTick();
-			}
-
-			vTaskDelay(_airspeedTickIntervalTicks);
-		}
-	}
-
-	bool I2CADIRS::checkMS4525Error(const char* prefix, const MS4525Error error) {
-		if (error == MS4525Error::none)
-			return true;
-
-		ESP_LOGE(_logTag, "%s: %s", prefix, MS4525::errorToString(error));
-
-		return false;
 	}
 }

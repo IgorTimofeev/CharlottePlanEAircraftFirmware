@@ -11,9 +11,21 @@
 #include "Utilities/Math.hpp"
 
 namespace pizda {
-	void AdaptiveComplimentaryFiler::apply(const Vector3F& accelData, const Vector3F& gyroData, const Vector3F& magData,
-		const float deltaTimeS, const float rollAndPitchGyroTrustFactorMin, const float rollAndPitchGyroTrustFactorMax,
-		const float magGyroTrustFactor, float& rollRad, float& pitchRad, float& yawRad) {
+	void AdaptiveComplimentaryFiler::apply(
+		const Vector3F& accelData,
+		const Vector3F& gyroData,
+		const Vector3F& magData,
+
+		const float deltaTimeS,
+
+		const float rollAndPitchGyroTrustFactorMin,
+		const float rollAndPitchGyroTrustFactorMax,
+		const float magGyroTrustFactor,
+
+		float& rollRad,
+		float& pitchRad,
+		float& yawRad
+	) {
 		const float accelRoll = -std::atan2(accelData.getX(), accelData.getZ());
 		const float accelPitch = std::atan2(accelData.getY(), accelData.getZ());
 
@@ -46,11 +58,7 @@ namespace pizda {
 		//				float magYawWithoutTilt = std::atan2(magData.getX(), magData.getY());
 
 		const auto magDataTilt = applyTiltCompensation(magData, rollRad, pitchRad);
-
-		const auto magYawRad =
-			std::atan2(magDataTilt.getX(), magDataTilt.getY())
-			// Applying magnetic declination
-			+ toRadians(Aircraft::getInstance().settings.adirs.getMagneticDeclinationDeg());
+		const auto magYawRad = std::atan2(magDataTilt.getX(), magDataTilt.getY());
 
 		// For mag, we're using other gyro trust factor, because mag produces a lot of noise
 		yawRad = applyGyroTrustFactor(magYawRad, gyroYaw, magGyroTrustFactor);
@@ -66,15 +74,13 @@ namespace pizda {
 		// ESP_LOGI("Compl", "mag yaw: %f", toDegrees(magYawRad));
 	}
 
-	Vector3F AdaptiveComplimentaryFiler::applyTiltCompensation(const Vector3F& vec, const float rollRad,
-		const float pitchRad) {
+	Vector3F AdaptiveComplimentaryFiler::applyTiltCompensation(const Vector3F& vec, const float rollRad, const float pitchRad) {
 		return vec
 		       .rotateAroundXAxis(pitchRad)
 		       .rotateAroundYAxis(rollRad);
 	}
 
-	float AdaptiveComplimentaryFiler::applyGyroTrustFactor(const float nonGyroValue, const float gyroValue,
-		const float gyroTrustFactor) {
+	float AdaptiveComplimentaryFiler::applyGyroTrustFactor(const float nonGyroValue, const float gyroValue, const float gyroTrustFactor) {
 		// Normally calculation logic should be as simple as
 		// return nonGyroValue * (1.0f - gyroTrustFactor) + gyroValue * gyroTrustFactor;
 

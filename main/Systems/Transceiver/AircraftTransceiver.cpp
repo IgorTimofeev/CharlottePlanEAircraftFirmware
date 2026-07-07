@@ -138,7 +138,7 @@ namespace pizda {
 			coefficients.p = stream.readFloat();
 			coefficients.i = stream.readFloat();
 			coefficients.d = stream.readFloat();
-			Aircraft::getInstance().settings.autopilot.configuration.writeLater();
+			Aircraft::getInstance().settings.autopilotConfiguration.writeLater();
 
 			ESP_LOGI(_logTag, "PID values: %f, %f, %f", coefficients.p, coefficients.i, coefficients.d);
 
@@ -204,8 +204,8 @@ namespace pizda {
 				// Reference pressure
 				const auto referencePressureDaPa = stream.readUint16(RemoteSystemPacket::referencePressureLengthBits);
 
-				ac.settings.adirs.setReferencePressurePa(sanitizeValue<uint32_t>(static_cast<uint32_t>(referencePressureDaPa) * 10, 900'00, 1100'00));
-				ac.settings.adirs.writeLater();
+				ac.settings.flightModeSelection.setReferencePressurePa(sanitizeValue<uint32_t>(static_cast<uint32_t>(referencePressureDaPa) * 10, 900'00, 1100'00));
+				ac.settings.flightModeSelection.writeLater();
 
 				return true;
 			}
@@ -295,10 +295,10 @@ namespace pizda {
 
 				auto& ac = Aircraft::getInstance();
 
-				ac.settings.adirs.setMagneticDeclinationDeg(stream.readInt16(RemoteSystemPacket::magneticDeclinationLengthBits));
-				ac.settings.adirs.writeLater();
+				ac.settings.ADIRS.setMagneticDeclinationDeg(stream.readInt16(RemoteSystemPacket::magneticDeclinationLengthBits));
+				ac.settings.ADIRS.writeLater();
 
-				ESP_LOGI(_logTag, "Magnetic declination: %d", ac.settings.adirs.getMagneticDeclinationDeg());
+				ESP_LOGI(_logTag, "Magnetic declination: %d", ac.settings.ADIRS.getMagneticDeclinationDeg());
 
 				return true;
 			}
@@ -422,8 +422,8 @@ namespace pizda {
 
 				auto& ac = Aircraft::getInstance();
 
-				ac.settings.autopilot.selection.setSelectedHeadingDeg(stream.readUint16(RemoteSystemPacket::autopilotHeadingLengthBits));
-				ac.settings.autopilot.selection.writeLater();
+				ac.settings.flightModeSelection.setSelectedHeadingDeg(stream.readUint16(RemoteSystemPacket::autopilotHeadingLengthBits));
+				ac.settings.flightModeSelection.writeLater();
 
 				return true;
 			}
@@ -438,15 +438,15 @@ namespace pizda {
 
 				auto& ac = Aircraft::getInstance();
 
-				ac.settings.autopilot.configuration.maxRollAngleRad = stream.readFloat();
-				ac.settings.autopilot.configuration.writeLater();
+				ac.settings.autopilotConfiguration.maxRollAngleRad = stream.readFloat();
+				ac.settings.autopilotConfiguration.writeLater();
 
 				return true;
 			}
 			case RemoteSystemPacketType::autopilotYawToRollPID: {
 				auto& ac = Aircraft::getInstance();
 
-				if (!readPID(ac.settings.autopilot.configuration.PIDs.yawToRoll))
+				if (!readPID(ac.settings.autopilotConfiguration.PIDs.yawToRoll))
 					return false;
 
 				return true;
@@ -454,7 +454,7 @@ namespace pizda {
 			case RemoteSystemPacketType::autopilotRollToAileronsPID: {
 				auto& ac = Aircraft::getInstance();
 
-				if (!readPID(ac.settings.autopilot.configuration.PIDs.rollToAilerons))
+				if (!readPID(ac.settings.autopilotConfiguration.PIDs.rollToAilerons))
 					return false;
 
 				return true;
@@ -470,8 +470,8 @@ namespace pizda {
 
 				auto& ac = Aircraft::getInstance();
 
-				ac.settings.autopilot.configuration.stabilizedModeRollAngleIncrementRadPerSecond = stream.readFloat();
-				ac.settings.autopilot.configuration.writeLater();
+				ac.settings.autopilotConfiguration.stabilizedModeRollAngleIncrementRadPerSecond = stream.readFloat();
+				ac.settings.autopilotConfiguration.writeLater();
 
 				return true;
 			}
@@ -486,8 +486,8 @@ namespace pizda {
 
 				auto& ac = Aircraft::getInstance();
 
-				ac.settings.autopilot.configuration.rollAngleEMAFilterFactorPerSecond = stream.readFloat();
-				ac.settings.autopilot.configuration.writeLater();
+				ac.settings.autopilotConfiguration.rollAngleEMAFilterFactorPerSecond = stream.readFloat();
+				ac.settings.autopilotConfiguration.writeLater();
 
 				return true;
 			}
@@ -502,8 +502,8 @@ namespace pizda {
 
 				auto& ac = Aircraft::getInstance();
 
-				ac.settings.autopilot.configuration.maxAileronsPercent = stream.readUint8(RemoteSystemPacket::autopilotPercentLengthBits);
-				ac.settings.autopilot.configuration.writeLater();
+				ac.settings.autopilotConfiguration.maxAileronsPercent = stream.readUint8(RemoteSystemPacket::autopilotPercentLengthBits);
+				ac.settings.autopilotConfiguration.writeLater();
 
 				return true;
 			}
@@ -535,14 +535,14 @@ namespace pizda {
 
 				auto& ac = Aircraft::getInstance();
 
-				ac.settings.autopilot.selection.setSelectedAltitudeM(readAltitude(
+				ac.settings.flightModeSelection.setSelectedAltitudeM(readAltitude(
 					stream,
 					RemoteSystemPacket::autopilotAltitudeLengthBits,
 					RemoteSystemPacket::autopilotAltitudeMinM,
 					RemoteSystemPacket::autopilotAltitudeMaxM
 				));
 
-				ac.settings.autopilot.selection.writeLater();
+				ac.settings.flightModeSelection.writeLater();
 
 				return true;
 			}
@@ -557,15 +557,15 @@ namespace pizda {
 
 				auto& ac = Aircraft::getInstance();
 
-				ac.settings.autopilot.configuration.maxPitchAngleRad = stream.readFloat();
-				ac.settings.autopilot.configuration.writeLater();
+				ac.settings.autopilotConfiguration.maxPitchAngleRad = stream.readFloat();
+				ac.settings.autopilotConfiguration.writeLater();
 
 				return true;
 			}
 			case RemoteSystemPacketType::autopilotSpeedToPitchPID: {
 				auto& ac = Aircraft::getInstance();
 
-				if (!readPID(ac.settings.autopilot.configuration.PIDs.speedToPitch))
+				if (!readPID(ac.settings.autopilotConfiguration.PIDs.speedToPitch))
 					return false;
 
 				return true;
@@ -573,7 +573,7 @@ namespace pizda {
 			case RemoteSystemPacketType::autopilotAltitudeToPitchPID: {
 				auto& ac = Aircraft::getInstance();
 
-				if (!readPID(ac.settings.autopilot.configuration.PIDs.altitudeToPitch))
+				if (!readPID(ac.settings.autopilotConfiguration.PIDs.altitudeToPitch))
 					return false;
 
 				return true;
@@ -581,7 +581,7 @@ namespace pizda {
 			case RemoteSystemPacketType::autopilotPitchToElevatorPID: {
 				auto& ac = Aircraft::getInstance();
 
-				if (!readPID(ac.settings.autopilot.configuration.PIDs.pitchToElevator))
+				if (!readPID(ac.settings.autopilotConfiguration.PIDs.pitchToElevator))
 					return false;
 
 				return true;
@@ -597,8 +597,8 @@ namespace pizda {
 
 				auto& ac = Aircraft::getInstance();
 
-				ac.settings.autopilot.configuration.stabilizedModePitchAngleIncrementRadPerSecond = stream.readFloat();
-				ac.settings.autopilot.configuration.writeLater();
+				ac.settings.autopilotConfiguration.stabilizedModePitchAngleIncrementRadPerSecond = stream.readFloat();
+				ac.settings.autopilotConfiguration.writeLater();
 
 				return true;
 			}
@@ -613,8 +613,8 @@ namespace pizda {
 
 				auto& ac = Aircraft::getInstance();
 
-				ac.settings.autopilot.configuration.pitchAngleEMAFilterFactorPerSecond = stream.readFloat();
-				ac.settings.autopilot.configuration.writeLater();
+				ac.settings.autopilotConfiguration.pitchAngleEMAFilterFactorPerSecond = stream.readFloat();
+				ac.settings.autopilotConfiguration.writeLater();
 
 				return true;
 			}
@@ -629,8 +629,8 @@ namespace pizda {
 
 				auto& ac = Aircraft::getInstance();
 
-				ac.settings.autopilot.configuration.maxElevatorPercent = stream.readUint8(RemoteSystemPacket::autopilotPercentLengthBits);
-				ac.settings.autopilot.configuration.writeLater();
+				ac.settings.autopilotConfiguration.maxElevatorPercent = stream.readUint8(RemoteSystemPacket::autopilotPercentLengthBits);
+				ac.settings.autopilotConfiguration.writeLater();
 
 				return true;
 			}
@@ -666,15 +666,15 @@ namespace pizda {
 					static_cast<float>(stream.readUint8(RemoteSystemPacket::autopilotSpeedLengthBits))
 					/ static_cast<float>((1 << RemoteSystemPacket::autopilotSpeedLengthBits) - 1);
 
-				ac.settings.autopilot.selection.setSelectedSpeedMPS(static_cast<float>(RemoteSystemPacket::autopilotSpeedMaxMPS) * speedFactor);
-				ac.settings.autopilot.selection.writeLater();
+				ac.settings.flightModeSelection.setSelectedSpeedMPS(static_cast<float>(RemoteSystemPacket::autopilotSpeedMaxMPS) * speedFactor);
+				ac.settings.flightModeSelection.writeLater();
 
 				return true;
 			}
 			case RemoteSystemPacketType::autopilotSpeedToThrottlePID: {
 				auto& ac = Aircraft::getInstance();
 
-				if (!readPID(ac.settings.autopilot.configuration.PIDs.speedToThrottle))
+				if (!readPID(ac.settings.autopilotConfiguration.PIDs.speedToThrottle))
 					return false;
 
 				return true;
@@ -690,8 +690,8 @@ namespace pizda {
 
 				auto& ac = Aircraft::getInstance();
 
-				ac.settings.autopilot.configuration.minThrottlePercent = stream.readUint8(RemoteSystemPacket::autopilotPercentLengthBits);
-				ac.settings.autopilot.configuration.writeLater();
+				ac.settings.autopilotConfiguration.minThrottlePercent = stream.readUint8(RemoteSystemPacket::autopilotPercentLengthBits);
+				ac.settings.autopilotConfiguration.writeLater();
 
 				return true;
 			}
@@ -706,8 +706,8 @@ namespace pizda {
 
 				auto& ac = Aircraft::getInstance();
 
-				ac.settings.autopilot.configuration.maxThrottlePercent = stream.readUint8(RemoteSystemPacket::autopilotPercentLengthBits);
-				ac.settings.autopilot.configuration.writeLater();
+				ac.settings.autopilotConfiguration.maxThrottlePercent = stream.readUint8(RemoteSystemPacket::autopilotPercentLengthBits);
+				ac.settings.autopilotConfiguration.writeLater();
 
 				return true;
 			}
@@ -805,7 +805,7 @@ namespace pizda {
 					stream,
 					ac.fbw.getVerticalMode() == AutopilotVerticalMode::alt
 						? ac.fbw.getHoldAltitudeM()
-						: ac.settings.autopilot.selection.getSelectedAltitudeM(),
+						: ac.settings.flightModeSelection.getSelectedAltitudeM(),
 					AircraftBTierTelemetryPacket::autopilotAltitudeLengthBits,
 					AircraftBTierTelemetryPacket::autopilotAltitudeMinM,
 					AircraftBTierTelemetryPacket::autopilotAltitudeMaxM
