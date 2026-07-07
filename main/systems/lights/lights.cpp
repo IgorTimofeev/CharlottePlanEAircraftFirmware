@@ -1,9 +1,9 @@
-#include "systems/lights/lights.h"
+#include "Systems/Lights/Lights.hpp"
 
 #include <esp_timer.h>
 #include <driver/gpio.h>
 
-#include "aircraft.h"
+#include "Aircraft.hpp"
 
 namespace pizda {
 	void Lights::setup() {

@@ -1,5 +1,3 @@
-#include "IMU.h"
-
 #include <cmath>
 #include <algorithm>
 
@@ -8,14 +6,14 @@
 #include <esp_log.h>
 #include <esp_timer.h>
 
-#include <MPU9250.h>
-#include <EMAFilter.h>
-#include <units.h>
+#include <MPU9250.hpp>
+#include <EMAFilter.hpp>
+#include <Units.hpp>
+#include <GeoCoordinates.hpp>
 
-#include "aircraft.h"
-#include "geoCoordinates.h"
-#include "systems/ADIRS/adaptiveComplimentaryFilter.h"
-#include "utilities/math.h"
+#include "Systems/ADIRS/IMU.hpp"
+#include "Aircraft.hpp"
+#include "Systems/ADIRS/AdaptiveComplimentaryFilter.hpp"
 
 namespace pizda {
     bool IMU::setup(BusHAL* bus) {

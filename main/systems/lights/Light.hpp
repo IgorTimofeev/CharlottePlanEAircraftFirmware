@@ -1,5 +1,7 @@
 #pragma once
 
+#include <driver/gpio.h>
+
 #include <led_strip.h>
 
 namespace pizda {

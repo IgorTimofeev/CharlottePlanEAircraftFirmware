@@ -3,9 +3,9 @@
 #include <cstdint>
 #include <atomic>
 
-#include <PIDController.h>
+#include <PIDController.hpp>
 
-#include "types/generic.h"
+#include "Types/Generic.hpp"
 
 namespace pizda {
 	using namespace YOBA;

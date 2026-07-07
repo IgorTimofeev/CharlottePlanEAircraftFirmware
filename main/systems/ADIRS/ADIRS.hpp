@@ -2,9 +2,9 @@
 
 #include <atomic>
 
-#include <geoCoordinates.h>
+#include <GeoCoordinates.hpp>
 
-#include "utilities/math.h"
+#include "Utilities/Math.hpp"
 
 namespace pizda {
 	using namespace YOBA;

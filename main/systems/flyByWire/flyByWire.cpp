@@ -1,17 +1,17 @@
-#include "systems/flyByWire/flyByWire.h"
+#include "Systems/FlyByWire/FlyByWire.hpp"
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <esp_timer.h>
 #include <esp_log.h>
-
-#include <units.h>
-#include <EMAFilter.h>
 #include <sys/stat.h>
 
-#include "config.h"
-#include "aircraft.h"
-#include "utilities/math.h"
+#include <Units.hpp>
+#include <EMAFilter.hpp>
+
+#include "Config.hpp"
+#include "Aircraft.hpp"
+#include "Utilities/Math.hpp"
 
 namespace pizda {
 	void FlyByWire::setup() {

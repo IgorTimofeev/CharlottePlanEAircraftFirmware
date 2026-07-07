@@ -4,11 +4,11 @@
 #include <span>
 #include <atomic>
 
-#include <NVSSettings.h>
-#include <NVSStream.h>
-#include <vector3.h>
+#include <NVSSettings.hpp>
+#include <NVSStream.hpp>
+#include <Vector3.hpp>
 
-#include "config.h"
+#include "Config.hpp"
 
 namespace pizda {
 	using namespace YOBA;

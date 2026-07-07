@@ -1,6 +1,6 @@
 #pragma once
 
-#include "systems/ADIRS/ADIRS.h"
+#include "Systems/ADIRS/ADIRS.hpp"
 
 namespace pizda {
 	class SimADIRS : public ADIRS {

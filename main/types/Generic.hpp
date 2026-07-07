@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <algorithm>
 
-#include <SX1262.h>
+#include <SX1262.hpp>
 
 namespace pizda {
 	using namespace YOBA;

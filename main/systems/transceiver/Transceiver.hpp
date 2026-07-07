@@ -11,16 +11,16 @@
 #include <esp_log.h>
 #include <esp_timer.h>
 
-#include <SX1262.h>
-#include <bitStream.h>
-#include <circularQueue.h>
+#include <SX1262.hpp>
+#include <BitStream.hpp>
+#include <CircularQueue.hpp>
 
-#include "config.h"
-#include "utilities/math.h"
+#include "Config.hpp"
+#include "Utilities/Math.hpp"
 
-#include "config.h"
-#include "types/generic.h"
-#include "packet.h"
+#include "Config.hpp"
+#include "Types/Generic.hpp"
+#include "Systems/Transceiver/Packet.hpp"
 
 namespace pizda {
 	using namespace YOBA;
@@ -269,8 +269,8 @@ namespace pizda {
 			uint8_t _SXBuffer[_SXBufferLength] {};
 
 			static void logSXError(const char* key, const SX1262Error error) {
-				// if (error == SX1262Error::timeout)
-				// 	return;
+				if (error == SX1262Error::timeout)
+					return;
 
 				ESP_LOGE(_logTag, "%s: %s", key, SX1262::errorToString(error));
 			}

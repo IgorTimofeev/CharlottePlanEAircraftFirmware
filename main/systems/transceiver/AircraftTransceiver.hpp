@@ -2,9 +2,9 @@
 
 #include <array>
 
-#include "transceiver.h"
+#include <BitStream.hpp>
 
-#include <bitStream.h>
+#include "Systems/Transceiver/Transceiver.hpp"
 
 namespace pizda {
 	class AircraftTransceiver : public Transceiver<

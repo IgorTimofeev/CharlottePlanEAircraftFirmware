@@ -3,11 +3,11 @@
 #include <array>
 #include <atomic>
 
-#include "types/generic.h"
-#include "config.h"
-#include "systems/motors/motor.h"
+#include <PCA9685.hpp>
 
-#include <PCA9685.h>
+#include "Types/Generic.hpp"
+#include "Systems/Motors/Motor.hpp"
+#include "Config.hpp"
 
 namespace pizda {
 	using namespace YOBA;

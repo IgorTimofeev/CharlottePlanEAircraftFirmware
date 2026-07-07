@@ -1,4 +1,4 @@
-#include "aircraft.h"
+#include "Aircraft.hpp"
 
 extern "C" void app_main(void) {
 	pizda::Aircraft::getInstance().start();

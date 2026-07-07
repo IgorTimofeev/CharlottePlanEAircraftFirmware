@@ -3,7 +3,7 @@
 #include <cmath>
 #include <atomic>
 
-#include "types/generic.h"
+#include "Types/Generic.hpp"
 
 namespace pizda {
 	class RemoteDataRawControls {

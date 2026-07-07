@@ -1,9 +1,9 @@
-#include "systems/transceiver/aircraftTransceiver.h"
+#include "Systems/transceiver/AircraftTransceiver.hpp"
 
 #include <utility>
 
-#include "aircraft.h"
-#include "systems/motors/motors.h"
+#include "Aircraft.hpp"
+#include "Systems/Motors/Motors.hpp"
 
 namespace pizda {
 	// -------------------------------- Generic --------------------------------

@@ -1,12 +1,11 @@
-#include "ADIRS.h"
-
 #include <cmath>
 #include <algorithm>
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
-#include "aircraft.h"
+#include "Systems/ADIRS/ADIRS.hpp"
+#include "Aircraft.hpp"
 
 namespace pizda {
 	void ADIRS::setup() {

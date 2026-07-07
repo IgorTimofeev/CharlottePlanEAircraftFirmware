@@ -7,7 +7,7 @@
 #include <driver/gpio.h>
 #include <esp_log.h>
 
-#include "config.h"
+#include "Config.hpp"
 
 namespace pizda {
 	#pragma pack(push, 1)

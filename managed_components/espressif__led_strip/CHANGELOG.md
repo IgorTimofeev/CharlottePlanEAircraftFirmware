@@ -1,3 +1,7 @@
+## 3.0.3
+
+- Support WS2816 with 16-bit color
+
 ## 3.0.1
 
 - Support WS2811 bit timing
@@ -13,7 +17,7 @@
 
 ## 2.5.4
 
-- Inserted extra delayMs when initialize the SPI LED device, to ensure all LEDs are in the reset state correctly
+- Inserted extra delay when initialize the SPI LED device, to ensure all LEDs are in the reset state correctly
 
 ## 2.5.3
 

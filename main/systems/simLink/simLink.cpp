@@ -1,6 +1,5 @@
-#include "simLink.h"
-
-#include "aircraft.h"
+#include "Systems/SimLink/SimLink.hpp"
+#include "Aircraft.hpp"
 
 namespace pizda {
 	void SimLink::setup() {

@@ -1,17 +1,14 @@
 #pragma once
 
-#include "systems/ADIRS/ADIRS.h"
-
 #include <array>
 
-#include <BMP280.h>
-#include <MPU9250.h>
-#include <MS4525.h>
+#include <BMP280.hpp>
+#include <MPU9250.hpp>
+#include <MS4525.hpp>
 
-#include "config.h"
-#include "config.h"
-#include "config.h"
-#include "systems/ADIRS/IMU.h"
+#include "Systems/ADIRS/ADIRS.hpp"
+#include "Systems/ADIRS/IMU.hpp"
+#include "Config.hpp"
 
 namespace pizda {
 	template<typename TUnit>

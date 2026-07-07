@@ -1,15 +1,14 @@
-#include "systems/ADIRS/adaptiveComplimentaryFilter.h"
-
 #include <cmath>
 #include <algorithm>
 
 #include <esp_log.h>
 
-#include <vector3.h>
-#include <EMAFilter.h>
+#include <Vector3.hpp>
+#include <EMAFilter.hpp>
 
-#include "aircraft.h"
-#include "utilities/math.h"
+#include "Systems/ADIRS/AdaptiveComplimentaryFilter.hpp"
+#include "Aircraft.hpp"
+#include "Utilities/Math.hpp"
 
 namespace pizda {
 	void AdaptiveComplimentaryFiler::apply(const Vector3F& accelData, const Vector3F& gyroData, const Vector3F& magData,

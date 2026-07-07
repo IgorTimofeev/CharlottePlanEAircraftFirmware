@@ -10,15 +10,15 @@
 #include <driver/spi_master.h>
 #include <driver/i2c_master.h>
 
-#include <units.h>
-#include <SX1262.h>
-#include <PCA9685.h>
-#include <MS4525.h>
-#include <MPU9250.h>
-#include <BMP280.h>
+#include <Units.hpp>
+#include <SX1262.hpp>
+#include <PCA9685.hpp>
+#include <MS4525.hpp>
+#include <MPU9250.hpp>
+#include <BMP280.hpp>
 
-#include "utilities/math.h"
-#include "types/generic.h"
+#include "Utilities/Math.hpp"
+#include "Types/Generic.hpp"
 
 namespace pizda {
 	using namespace YOBA;

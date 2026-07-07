@@ -1,6 +1,6 @@
 #pragma once
 
-#include "types/generic.h"
+#include "Types/Generic.hpp"
 
 namespace pizda {
 	class Motor {

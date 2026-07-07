@@ -2,9 +2,9 @@
 
 #include <esp_timer.h>
 
-#include "config.h"
-#include "systems/lights/light.h"
-#include "settings/settings.h"
+#include "Systems/Lights/Light.hpp"
+#include "Settings/Settings.hpp"
+#include "Config.hpp"
 
 namespace pizda {
 	class Lights {

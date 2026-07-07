@@ -2,8 +2,7 @@
 
 #include <atomic>
 
-#include <NVSSettings.h>
-#include <NVSStream.h>
+#include <NVSSettings.hpp>
 
 namespace pizda {
 	using namespace YOBA;

@@ -2,9 +2,9 @@
 
 #include <cstdint>
 
-#include <NVSSettings.h>
+#include <NVSSettings.hpp>
 
-#include "types/generic.h"
+#include "Types/Generic.hpp"
 
 namespace pizda {
 	using namespace YOBA;

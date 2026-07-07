@@ -3,10 +3,10 @@
 #include <cstdint>
 #include <atomic>
 
-#include <NVSSettings.h>
+#include <NVSSettings.hpp>
 
-#include "types/generic.h"
-#include "utilities/math.h"
+#include "Types/Generic.hpp"
+#include "Utilities/Math.hpp"
 
 namespace pizda {
 	using namespace YOBA;

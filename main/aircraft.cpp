@@ -1,9 +1,8 @@
-#include "aircraft.h"
-
+#include <esp_adc/adc_continuous.h>
 #include <esp_log.h>
 
-#include "config.h"
-#include "esp_adc/adc_continuous.h"
+#include "Config.hpp"
+#include "Aircraft.hpp"
 
 namespace pizda {
 	Aircraft& Aircraft::getInstance() {

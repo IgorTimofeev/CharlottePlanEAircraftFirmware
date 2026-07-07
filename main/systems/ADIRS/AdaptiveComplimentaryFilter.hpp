@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-#include <vector3.h>
+#include <Vector3.hpp>
 
 namespace pizda {
 	using namespace YOBA;

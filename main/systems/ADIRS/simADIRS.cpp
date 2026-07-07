@@ -1,5 +1,3 @@
-#include "simADIRS.h"
-
 
 #include <cstring>
 
@@ -8,10 +6,11 @@
 
 #include <esp_timer.h>
 
-#include "systems/ADIRS/ADIRS.h"
-#include "systems/simLink/simLink.h"
+#include "Systems/ADIRS/SimADIRS.hpp"
+#include "Systems/ADIRS/ADIRS.hpp"
+#include "Systems/SimLink/SimLink.hpp"
 
-#include "aircraft.h"
+#include "Aircraft.hpp"
 
 #ifdef SIM
 

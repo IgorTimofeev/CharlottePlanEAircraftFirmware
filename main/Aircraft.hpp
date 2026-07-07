@@ -5,22 +5,22 @@
 #include <esp_adc/adc_oneshot.h>
 #include <driver/i2c_master.h>
 
-#include <ADCVoltmeter.h>
+#include <ADCVoltmeter.hpp>
 
-#include "config.h"
-#include "settings/settings.h"
-#include "systems/lights/lights.h"
-#include "systems/motors/motors.h"
-#include "systems/transceiver/aircraftTransceiver.h"
-#include "types/aircraftData.h"
-#include "types/remoteData.h"
-#include "systems/flyByWire/flyByWire.h"
+#include "Config.hpp"
+#include "Settings/Settings.hpp"
+#include "Systems/Lights/Lights.hpp"
+#include "Systems/Motors/Motors.hpp"
+#include "Systems/transceiver/AircraftTransceiver.hpp"
+#include "Types/AircraftData.hpp"
+#include "Types/RemoteData.hpp"
+#include "Systems/FlyByWire/FlyByWire.hpp"
 
 #ifdef SIM
-	#include "systems/ADIRS/simADIRS.h"
-	#include "systems/simLink/simLink.h"
+	#include "Systems/ADIRS/SimADIRS.hpp"
+	#include "Systems/SimLink/SimLink.hpp"
 #else
-	#include "systems/ADIRS/I2CADIRS.h"
+	#include "Systems/ADIRS/I2CADIRS.hpp"
 #endif
 
 namespace pizda {

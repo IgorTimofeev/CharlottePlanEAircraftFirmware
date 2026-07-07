@@ -1,6 +1,6 @@
-#include "systems/motors/motor.h"
+#include "Systems/Motors/Motor.hpp"
 
-#include "aircraft.h"
+#include "Aircraft.hpp"
 
 namespace pizda {
 	uint16_t Motor::getRawPower() const {

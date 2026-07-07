@@ -1,15 +1,14 @@
-#include "systems/ADIRS/I2CADIRS.h"
-
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
 #include <esp_timer.h>
 
-#include <EMAFilter.h>
+#include <EMAFilter.hpp>
 
-#include "utilities/math.h"
-#include "aircraft.h"
-#include "config.h"
+#include "Systems/ADIRS/I2CADIRS.hpp"
+#include "Utilities/Math.hpp"
+#include "Aircraft.hpp"
+#include "Config.hpp"
 
 namespace pizda {
 	void I2CADIRS::setup() {

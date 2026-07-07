@@ -1,10 +1,10 @@
 #pragma once
 
-#include <NVSSettings.h>
-#include <SX1262.h>
+#include <NVSSettings.hpp>
+#include <SX1262.hpp>
 
-#include "config.h"
-#include "types/generic.h"
+#include "Config.hpp"
+#include "Types/Generic.hpp"
 
 namespace pizda {
 	using namespace YOBA;

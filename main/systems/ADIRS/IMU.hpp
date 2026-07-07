@@ -4,8 +4,9 @@
 #include <algorithm>
 
 #include <esp_log.h>
-#include <MPU9250.h>
-#include <vector3.h>
+
+#include <MPU9250.hpp>
+#include <Vector3.hpp>
 
 namespace pizda {
 	using namespace YOBA;
