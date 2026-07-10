@@ -443,7 +443,7 @@ namespace pizda {
 
 		// Camera
 		{
-			const auto setPower = [&ac](MotorType motorType, const int16_t angleDeg) {
+			const auto setPower = [&ac](const MotorType motorType, const int16_t angleDeg) {
 				ac.motors.getByType(motorType)->setPower(
 					(static_cast<int32_t>(angleDeg) - config::camera::servoMinDeg)
 					* static_cast<int32_t>(MotorSettings::powerMax)

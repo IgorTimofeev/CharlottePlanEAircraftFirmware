@@ -244,7 +244,7 @@ namespace pizda {
 				auto yawDeg = stream.readInt16(RemoteSystemPacket::cameraYawLengthBits);
 
 				config::camera::clamp(pitchDeg, yawDeg);
-				config::camera::correctPitchPitchForYaw(pitchDeg, yawDeg);
+				config::camera::correctPitchForYaw(pitchDeg, yawDeg);
 
 				ac.aircraftData.camera.setPitchDeg(pitchDeg);
 				ac.aircraftData.camera.setYawDeg(yawDeg);

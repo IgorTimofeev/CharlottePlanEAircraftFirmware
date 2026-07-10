@@ -192,7 +192,7 @@ namespace pizda {
 						);
 					}
 
-					static void correctPitchPitchForYaw(int16_t& pitch, int16_t yaw) {
+					static void correctPitchForYaw(int16_t& pitch, int16_t yaw) {
 						// Yaw abs
 						if (yaw < 0)
 							yaw = -yaw;
@@ -202,7 +202,7 @@ namespace pizda {
 							return;
 
 						// Changing pitch by difference between yaw and min/max threshold
-						pitch +=
+						pitch -=
 							static_cast<int16_t>(pitchCorrectionByMaxDeg)
 							* (yaw - pitchCorrectionYawThresholdMinDeg)
 							/ (pitchCorrectionYawThresholdMaxDeg - pitchCorrectionYawThresholdMinDeg);

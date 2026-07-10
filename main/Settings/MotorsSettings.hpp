@@ -31,7 +31,7 @@ namespace pizda {
 			MotorSettings* getByType(const MotorType type) {
 				switch (type) {
 					case MotorType::cameraPitch: return &cameraPitch;
-					case MotorType::cameraYaw: return &cameraPitch;
+					case MotorType::cameraYaw: return &cameraYaw;
 
 					case MotorType::throttleLeft: return &throttleLeft;
 					case MotorType::throttleRight: return &throttleRight;
@@ -45,13 +45,7 @@ namespace pizda {
 
 					case MotorType::tailLeft: return &tailLeft;
 					case MotorType::tailRight: return &tailRight;
-
-					default: {
-						char pizda[32];
-						std::snprintf(pizda, sizeof(pizda), "unsupported motor type: %d", std::to_underlying(type));
-
-						esp_system_abort(pizda);
-					}
+					default: return nullptr;
 				}
 			}
 		
